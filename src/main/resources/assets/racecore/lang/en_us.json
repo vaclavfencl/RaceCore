@@ -1,0 +1,13 @@
+{
+  "itemGroup.racecore": "Example Mod Tab",
+  "block.racecore.example_block": "Example Block",
+  "item.racecore.example_item": "Example Item",
+
+  "racecore.configuration.title": "RaceCore Configs",
+  "racecore.configuration.section.racecore.common.toml": "RaceCore Configs",
+  "racecore.configuration.section.racecore.common.toml.title": "RaceCore Configs",
+  "racecore.configuration.items": "Item List",
+  "racecore.configuration.logDirtBlock": "Log Dirt Block",
+  "racecore.configuration.magicNumberIntroduction": "Magic Number Text",
+  "racecore.configuration.magicNumber": "Magic Number"
+}
