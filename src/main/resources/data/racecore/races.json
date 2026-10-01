@@ -1,0 +1,92 @@
+{
+  "human": {
+    "displayName": "Human",
+    "maxHealth": 100.0,
+    "scale": 1.0,
+    "stepHeight": 0.99,
+    "jumpHeight": 1.485,
+    "movementSpeedMultiplier": 1.0,
+    "reachMultiplier": 1.0
+  },
+  "elf": {
+    "displayName": "Elf",
+    "maxHealth": 85.0,
+    "scale": 1.0,
+    "stepHeight": 0.99,
+    "jumpHeight": 1.6,
+    "movementSpeedMultiplier": 1.0,
+    "reachMultiplier": 1.0
+  },
+  "dwarf": {
+    "displayName": "Dwarf",
+    "maxHealth": 150.0,
+    "scale": 0.55,
+    "stepHeight": 0.45,
+    "jumpHeight": 1.0,
+    "movementSpeedMultiplier": 1.0,
+    "reachMultiplier": 1.0
+  },
+  "dragonborn": {
+    "displayName": "Dragonborn",
+    "maxHealth": 115.0,
+    "scale": 1.32,
+    "stepHeight": 1.32,
+    "jumpHeight": 2.0,
+    "movementSpeedMultiplier": 1.15,
+    "reachMultiplier": 1.25
+  },
+  "hobbit": {
+    "displayName": "Hobbit",
+    "maxHealth": 100.0,
+    "scale": 0.7,
+    "stepHeight": 0.7,
+    "jumpHeight": 1.05,
+    "movementSpeedMultiplier": 1.0,
+    "reachMultiplier": 1.0
+  },
+  "troll": {
+    "displayName": "Troll",
+    "maxHealth": 135.0,
+    "scale": 1.11,
+    "stepHeight": 1.11,
+    "jumpHeight": 1.665,
+    "movementSpeedMultiplier": 1.0,
+    "reachMultiplier": 1.0
+  },
+  "gargoyle": {
+    "displayName": "Gargoyle",
+    "maxHealth": 80.0,
+    "scale": 0.83,
+    "stepHeight": 0.83,
+    "jumpHeight": 1.245,
+    "movementSpeedMultiplier": 1.0,
+    "reachMultiplier": 1.0
+  },
+  "giant": {
+    "displayName": "Giant",
+    "maxHealth": 350.0,
+    "scale": 2.1,
+    "stepHeight": 2.0,
+    "jumpHeight": 3.5,
+    "movementSpeedMultiplier": 1.35,
+    "reachMultiplier": 2.0
+  },
+  "goblin": {
+    "displayName": "Goblin",
+    "maxHealth": 80.0,
+    "scale": 0.55,
+    "stepHeight": 0.45,
+    "jumpHeight": 1.0,
+    "movementSpeedMultiplier": 1.0,
+    "reachMultiplier": 1.0
+  },
+  "tiefling": {
+    "displayName": "Tiefling",
+    "maxHealth": 100.0,
+    "scale": 1.0,
+    "stepHeight": 0.99,
+    "jumpHeight": 1.52,
+    "movementSpeedMultiplier": 1.0,
+    "reachMultiplier": 1.0
+  }
+}
