@@ -32,7 +32,7 @@
     "scale": 1.32,
     "stepHeight": 1.32,
     "jumpHeight": 2.0,
-    "movementSpeedMultiplier": 1.15,
+    "movementSpeedMultiplier": 1.1,
     "reachMultiplier": 1.25
   },
   "hobbit": {
@@ -68,7 +68,7 @@
     "scale": 2.1,
     "stepHeight": 2.0,
     "jumpHeight": 3.5,
-    "movementSpeedMultiplier": 1.35,
+    "movementSpeedMultiplier": 1.2,
     "reachMultiplier": 2.0
   },
   "goblin": {

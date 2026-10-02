@@ -1,0 +1,6 @@
+{
+  "globalMovementMultiplier": 1.07,
+  "lightArmorFullSetPenalty": 0.025,
+  "mediumArmorFullSetPenalty": 0.075,
+  "heavyArmorFullSetPenalty": 0.15
+}
