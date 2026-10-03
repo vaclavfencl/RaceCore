@@ -88,6 +88,13 @@ public final class RaceManager {
                         "entity_interaction_range"
                 );
 
+        AttributeInstance safeFallDistance =
+                requireAttribute(
+                        player,
+                        Attributes.SAFE_FALL_DISTANCE,
+                        "safe_fall_distance"
+                );
+
         double oldMaxHealth = player.getMaxHealth();
         float oldHealth = player.getHealth();
 
@@ -120,6 +127,20 @@ public final class RaceManager {
         entityReach.setBaseValue(
                 Player.DEFAULT_ENTITY_INTERACTION_RANGE
                         * race.reachMultiplier()
+        );
+
+        /*
+         * Native Minecraft fall-damage threshold.
+         *
+         * Vanilla baseline is 3.0:
+         *   <= 3 blocks safe
+         *   4+ blocks starts dealing fall damage
+         *
+         * RaceCore changes the BASE value, so equipment/effects using
+         * SAFE_FALL_DISTANCE attribute modifiers can still stack normally.
+         */
+        safeFallDistance.setBaseValue(
+                race.safeFallDistance()
         );
 
         // Changing race is not a free heal.

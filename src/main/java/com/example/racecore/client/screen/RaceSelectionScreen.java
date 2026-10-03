@@ -11,14 +11,16 @@ import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 /**
- * Texture-free RaceCore race-selection screen.
+ * RaceCore race-selection screen.
  *
- * V1 intentionally uses only vanilla widgets and colors.
- * Custom artwork, icons and player/race model previews can be layered on later.
+ * The details panel is generated from RaceDefinition rather than from a second
+ * hardcoded race-description table. If a balance value changes in races.json,
+ * the selection screen therefore updates with it automatically.
  */
 public final class RaceSelectionScreen extends Screen {
     private static final List<String> RACE_ORDER = List.of(
@@ -34,14 +36,27 @@ public final class RaceSelectionScreen extends Screen {
             "tiefling"
     );
 
-    private static final DecimalFormat NUMBER;
+    private static final DecimalFormat NUMBER =
+            new DecimalFormat(
+                    "0.##",
+                    DecimalFormatSymbols.getInstance(Locale.ROOT)
+            );
 
-    static {
-        DecimalFormatSymbols symbols =
-                DecimalFormatSymbols.getInstance(Locale.ROOT);
+    private static final int COLOR_TITLE = 0xFFFFD966;
+    private static final int COLOR_HEADING = 0xFFB8B8B8;
+    private static final int COLOR_NORMAL = 0xFFFFFFFF;
+    private static final int COLOR_POSITIVE = 0xFF7FE27F;
+    private static final int COLOR_NEGATIVE = 0xFFFF7777;
+    private static final int COLOR_MIXED = 0xFFFFCC66;
+    private static final int COLOR_MUTED = 0xFF9A9A9A;
 
-        NUMBER = new DecimalFormat("0.##", symbols);
-    }
+    /*
+     * Step/jump are internal physical values and are noisy when every tiny
+     * difference is shown. Only display them if they differ by >=30% from
+     * Human, which catches truly race-defining cases such as Giant, Dwarf,
+     * Goblin and Dragonborn.
+     */
+    private static final double IMPORTANT_PHYSICAL_DIFFERENCE = 0.30;
 
     private String selectedRaceId = "human";
 
@@ -60,10 +75,10 @@ public final class RaceSelectionScreen extends Screen {
         super.init();
 
         panelWidth =
-                Math.min(570, Math.max(340, width - 32));
+                Math.min(680, Math.max(430, width - 24));
 
         panelHeight =
-                Math.min(310, Math.max(245, height - 32));
+                Math.min(390, Math.max(300, height - 24));
 
         panelX =
                 (width - panelWidth) / 2;
@@ -72,13 +87,13 @@ public final class RaceSelectionScreen extends Screen {
                 (height - panelHeight) / 2;
 
         listWidth =
-                Math.min(230, panelWidth * 42 / 100);
+                Math.min(230, panelWidth * 38 / 100);
 
         int raceAreaX =
                 panelX + 14;
 
         int raceAreaY =
-                panelY + 42;
+                panelY + 46;
 
         int gap = 6;
 
@@ -168,10 +183,6 @@ public final class RaceSelectionScreen extends Screen {
                 )
         );
 
-        /*
-         * The server is authoritative and validates the request.
-         * The normal UI can only send ids that came from RaceRegistry.
-         */
         minecraft.gui.setScreen(null);
     }
 
@@ -184,7 +195,6 @@ public final class RaceSelectionScreen extends Screen {
     ) {
         extractTransparentBackground(graphics);
 
-        // Main frame.
         graphics.fill(
                 panelX - 1,
                 panelY - 1,
@@ -201,22 +211,20 @@ public final class RaceSelectionScreen extends Screen {
                 0xF0181818
         );
 
-        // Header.
         graphics.fill(
                 panelX,
                 panelY,
                 panelX + panelWidth,
-                panelY + 30,
+                panelY + 32,
                 0xF0282828
         );
 
-        // Divider between race list and details.
         int dividerX =
                 panelX + listWidth + 25;
 
         graphics.fill(
                 dividerX,
-                panelY + 38,
+                panelY + 40,
                 dividerX + 1,
                 panelY + panelHeight - 42,
                 0xFF505050
@@ -241,15 +249,15 @@ public final class RaceSelectionScreen extends Screen {
                 font,
                 title,
                 panelX + panelWidth / 2,
-                panelY + 10,
-                0xFFFFFFFF
+                panelY + 11,
+                COLOR_NORMAL
         );
 
         graphics.text(
                 font,
                 Component.literal("Choose a race"),
                 panelX + 14,
-                panelY + 31,
+                panelY + 34,
                 0xFFAAAAAA,
                 false
         );
@@ -267,179 +275,925 @@ public final class RaceSelectionScreen extends Screen {
             return;
         }
 
+        RaceDefinition human =
+                RaceRegistry.get("human");
+
         int x =
                 panelX + listWidth + 40;
 
         int y =
-                panelY + 43;
+                panelY + 45;
 
         graphics.text(
                 font,
                 Component.literal(race.displayName()),
                 x,
                 y,
-                0xFFFFD966,
+                COLOR_TITLE,
                 true
         );
 
-        y += 20;
+        y += 17;
 
-        drawStat(
-                graphics,
+        graphics.text(
+                font,
+                Component.literal("Physical"),
                 x,
                 y,
-                "Maximum HP",
-                NUMBER.format(race.maxHealth())
+                COLOR_HEADING,
+                true
         );
 
-        y += 15;
+        y += 13;
 
-        drawStat(
-                graphics,
+        List<InfoLine> physical =
+                buildPhysicalLines(
+                        race,
+                        human
+                );
+
+        for (InfoLine line : physical) {
+            drawInfoLine(
+                    graphics,
+                    x,
+                    y,
+                    line
+            );
+
+            y += 12;
+        }
+
+        y += 5;
+
+        graphics.text(
+                font,
+                Component.literal("Abilities"),
                 x,
                 y,
-                "Size",
-                NUMBER.format(race.scale()) + "x"
+                COLOR_HEADING,
+                true
         );
 
-        y += 15;
+        y += 13;
 
-        drawStat(
-                graphics,
+        List<InfoLine> abilities =
+                buildAbilityLines(race);
+
+        if (abilities.isEmpty()) {
+            drawInfoLine(
+                    graphics,
+                    x,
+                    y,
+                    new InfoLine(
+                            "Generalist - no special downside",
+                            COLOR_MUTED
+                    )
+            );
+
+            y += 12;
+        } else {
+            for (InfoLine line : abilities) {
+                drawInfoLine(
+                        graphics,
+                        x,
+                        y,
+                        line
+                );
+
+                y += 12;
+            }
+        }
+
+        /*
+         * Keep the permanent-choice warning pinned above the confirm area
+         * instead of letting it drift based on the number of abilities.
+         */
+        int warningY =
+                panelY + panelHeight - 57;
+
+        graphics.text(
+                font,
+                Component.literal(
+                        "Race changes will require a future respec item."
+                ),
                 x,
-                y,
-                "Step Height",
-                NUMBER.format(race.stepHeight())
+                warningY,
+                0xFFFFAA55,
+                false
         );
+    }
 
-        y += 15;
+    private List<InfoLine> buildPhysicalLines(
+            RaceDefinition race,
+            RaceDefinition human
+    ) {
+        List<InfoLine> lines =
+                new ArrayList<>();
 
-        drawStat(
-                graphics,
-                x,
-                y,
-                "Jump Height",
-                NUMBER.format(race.jumpHeight())
-        );
-
-        y += 15;
-
-        drawStat(
-                graphics,
-                x,
-                y,
-                "Movement",
-                NUMBER.format(
-                        race.movementSpeedMultiplier()
-                ) + "x"
-        );
-
-        y += 15;
-
-        drawStat(
-                graphics,
-                x,
-                y,
-                "Reach",
-                NUMBER.format(
-                        race.reachMultiplier()
-                ) + "x"
-        );
-
-        y += 15;
-
-        drawStat(
-                graphics,
-                x,
-                y,
-                "Enchant Capacity",
-                Integer.toString(
-                        race.enchantmentCapacity()
+        lines.add(
+                new InfoLine(
+                        "HP: "
+                                + NUMBER.format(
+                                        race.maxHealth()
+                                ),
+                        COLOR_NORMAL
                 )
         );
 
-        y += 25;
-
-        graphics.text(
-                font,
-                Component.literal(
-                        "Race abilities and visual previews"
-                ),
-                x,
-                y,
-                0xFF9A9A9A,
-                false
+        lines.add(
+                new InfoLine(
+                        "Size: "
+                                + NUMBER.format(
+                                        race.scale() * 100.0
+                                )
+                                + "% of Human"
+                                + " ("
+                                + NUMBER.format(
+                                        race.scale()
+                                )
+                                + "x)",
+                        physicalComparisonColor(
+                                race.scale(),
+                                1.0
+                        )
+                )
         );
 
-        y += 12;
+        if (!approximately(
+                race.movementSpeedMultiplier(),
+                1.0
+        )) {
+            lines.add(
+                    new InfoLine(
+                            "Movement: "
+                                    + signedPercentFromMultiplier(
+                                            race.movementSpeedMultiplier()
+                                    ),
+                            comparisonColor(
+                                    race.movementSpeedMultiplier(),
+                                    1.0
+                            )
+                    )
+            );
+        }
 
-        graphics.text(
-                font,
-                Component.literal(
-                        "will be added here later."
-                ),
-                x,
-                y,
-                0xFF9A9A9A,
-                false
-        );
+        if (!approximately(
+                race.reachMultiplier(),
+                1.0
+        )) {
+            lines.add(
+                    new InfoLine(
+                            "Reach: "
+                                    + signedPercentFromMultiplier(
+                                            race.reachMultiplier()
+                                    ),
+                            comparisonColor(
+                                    race.reachMultiplier(),
+                                    1.0
+                            )
+                    )
+            );
+        }
 
-        y += 24;
+        if (race.enchantmentCapacity() != 4) {
+            lines.add(
+                    new InfoLine(
+                            "Enchant capacity: "
+                                    + race.enchantmentCapacity(),
+                            race.enchantmentCapacity() > 4
+                                    ? COLOR_POSITIVE
+                                    : COLOR_NEGATIVE
+                    )
+            );
+        }
 
-        graphics.text(
-                font,
-                Component.literal(
-                        "This choice is permanent until"
-                ),
-                x,
-                y,
-                0xFFFFAA55,
-                false
-        );
+        if (human != null
+                && isImportantDifference(
+                        race.stepHeight(),
+                        human.stepHeight()
+                )) {
+            lines.add(
+                    new InfoLine(
+                            "Step height: "
+                                    + NUMBER.format(
+                                            race.stepHeight()
+                                    ),
+                            comparisonColor(
+                                    race.stepHeight(),
+                                    human.stepHeight()
+                            )
+                    )
+            );
+        }
 
-        y += 12;
+        if (human != null
+                && isImportantDifference(
+                        race.jumpHeight(),
+                        human.jumpHeight()
+                )) {
+            lines.add(
+                    new InfoLine(
+                            "Jump height: "
+                                    + NUMBER.format(
+                                            race.jumpHeight()
+                                    ),
+                            comparisonColor(
+                                    race.jumpHeight(),
+                                    human.jumpHeight()
+                            )
+                    )
+            );
+        }
 
-        graphics.text(
-                font,
-                Component.literal(
-                        "you obtain a future race-respec item."
-                ),
-                x,
-                y,
-                0xFFFFAA55,
-                false
-        );
+        return lines;
     }
 
-    private void drawStat(
+    private List<InfoLine> buildAbilityLines(
+            RaceDefinition race
+    ) {
+        List<InfoLine> lines =
+                new ArrayList<>();
+
+        if (race.xpBonus() != 0.0) {
+            lines.add(
+                    positive(
+                            signedPercent(
+                                    race.xpBonus()
+                            )
+                                    + " XP"
+                    )
+            );
+        }
+
+        if (!approximately(
+                race.miningSpeedMultiplier(),
+                1.0
+        )) {
+            lines.add(
+                    comparison(
+                            "Mining speed: "
+                                    + signedPercentFromMultiplier(
+                                            race.miningSpeedMultiplier()
+                                    ),
+                            race.miningSpeedMultiplier(),
+                            1.0
+                    )
+            );
+        }
+
+        if (race.fortuneBonus() != 0) {
+            lines.add(
+                    positive(
+                            "+"
+                                    + race.fortuneBonus()
+                                    + " effective Fortune"
+                    )
+            );
+        }
+
+        if (race.cropFortuneBonus() != 0) {
+            lines.add(
+                    positive(
+                            "+"
+                                    + race.cropFortuneBonus()
+                                    + " Fortune on crops"
+                    )
+            );
+        }
+
+        if (race.knockbackResistanceBonus() != 0.0) {
+            lines.add(
+                    positive(
+                            signedPercent(
+                                    race.knockbackResistanceBonus()
+                            )
+                                    + " knockback resistance"
+                    )
+            );
+        }
+
+        if (race.heavyArmorPenaltyMultiplier() < 1.0) {
+            lines.add(
+                    positive(
+                            "Heavy armor slowdown reduced by "
+                                    + NUMBER.format(
+                                            (1.0
+                                                    - race.heavyArmorPenaltyMultiplier())
+                                                    * 100.0
+                                    )
+                                    + "%"
+                    )
+            );
+        }
+
+        if (!approximately(
+                race.outgoingDamageMultiplier(),
+                1.0
+        )) {
+            lines.add(
+                    comparison(
+                            "Outgoing damage: "
+                                    + signedPercentFromMultiplier(
+                                            race.outgoingDamageMultiplier()
+                                    ),
+                            race.outgoingDamageMultiplier(),
+                            1.0
+                    )
+            );
+        }
+
+        if (!approximately(
+                race.incomingDamageMultiplier(),
+                1.0
+        )) {
+            /*
+             * Higher incoming damage is bad, so reverse the usual multiplier
+             * color meaning.
+             */
+            lines.add(
+                    new InfoLine(
+                            "Incoming damage: "
+                                    + signedPercentFromMultiplier(
+                                            race.incomingDamageMultiplier()
+                                    ),
+                            race.incomingDamageMultiplier() > 1.0
+                                    ? COLOR_NEGATIVE
+                                    : COLOR_POSITIVE
+                    )
+            );
+        }
+
+        if (!approximately(
+                race.nonNetherIncomingDamageMultiplier(),
+                1.0
+        )) {
+            lines.add(
+                    new InfoLine(
+                            "Outside Nether: "
+                                    + signedPercentFromMultiplier(
+                                            race.nonNetherIncomingDamageMultiplier()
+                                    )
+                                    + " incoming damage",
+                            race.nonNetherIncomingDamageMultiplier() > 1.0
+                                    ? COLOR_NEGATIVE
+                                    : COLOR_POSITIVE
+                    )
+            );
+        }
+
+        if (!approximately(
+                race.dragonDamageMultiplier(),
+                1.0
+        )) {
+            lines.add(
+                    comparison(
+                            NUMBER.format(
+                                    race.dragonDamageMultiplier()
+                            )
+                                    + "x damage to dragons",
+                            race.dragonDamageMultiplier(),
+                            1.0
+                    )
+            );
+        }
+
+        if (race.poisonDamageMultiplier() == 0.0) {
+            lines.add(
+                    positive(
+                            "Immune to poison damage"
+                    )
+            );
+        } else if (!approximately(
+                race.poisonDamageMultiplier(),
+                1.0
+        )) {
+            lines.add(
+                    positive(
+                            "Poison damage taken: "
+                                    + NUMBER.format(
+                                            race.poisonDamageMultiplier()
+                                                    * 100.0
+                                    )
+                                    + "%"
+                    )
+            );
+        }
+
+        if (!approximately(
+                race.fireDamageMultiplier(),
+                1.0
+        )) {
+            lines.add(
+                    new InfoLine(
+                            "Fire/lava damage taken: "
+                                    + NUMBER.format(
+                                            race.fireDamageMultiplier()
+                                                    * 100.0
+                                    )
+                                    + "%",
+                            race.fireDamageMultiplier() < 1.0
+                                    ? COLOR_POSITIVE
+                                    : COLOR_NEGATIVE
+                    )
+            );
+        }
+
+        if (!approximately(
+                race.fireworkDamageMultiplier(),
+                1.0
+        )) {
+            lines.add(
+                    new InfoLine(
+                            "Firework damage taken: "
+                                    + NUMBER.format(
+                                            race.fireworkDamageMultiplier()
+                                    )
+                                    + "x",
+                            race.fireworkDamageMultiplier() > 1.0
+                                    ? COLOR_NEGATIVE
+                                    : COLOR_POSITIVE
+                    )
+            );
+        }
+
+        if (race.passiveRegenerationPerSecond() > 0.0) {
+            lines.add(
+                    positive(
+                            "Regenerates "
+                                    + NUMBER.format(
+                                            race.passiveRegenerationPerSecond()
+                                    )
+                                    + " HP/s"
+                    )
+            );
+        }
+
+        if (race.permanentNightVision()) {
+            lines.add(
+                    positive(
+                            "Permanent Night Vision"
+                    )
+            );
+        }
+
+        if (race.canLoadFireworkRockets()) {
+            lines.add(
+                    positive(
+                            "Can load firework rockets into crossbows"
+                    )
+            );
+        }
+
+        if (race.canEatWhenFull()) {
+            lines.add(
+                    positive(
+                            "Can eat while full"
+                    )
+            );
+        }
+
+        if (!approximately(
+                race.foodHungerMultiplier(),
+                1.0
+        )) {
+            lines.add(
+                    positive(
+                            "Food restores "
+                                    + NUMBER.format(
+                                            race.foodHungerMultiplier()
+                                    )
+                                    + "x hunger"
+                    )
+            );
+        }
+
+        if (race.foodHealing() > 0.0) {
+            lines.add(
+                    positive(
+                            "Eating heals "
+                                    + NUMBER.format(
+                                            race.foodHealing()
+                                    )
+                                    + " HP"
+                    )
+            );
+        }
+
+        if (!race.canWearBoots()) {
+            lines.add(
+                    negative(
+                            "Cannot wear boots"
+                    )
+            );
+        }
+
+        if (race.canWearLightArmor()
+                && !race.canWearMediumArmor()
+                && !race.canWearHeavyArmor()) {
+            lines.add(
+                    negative(
+                            "Can wear only Light armor"
+                    )
+            );
+        } else {
+            if (!race.canWearLightArmor()) {
+                lines.add(
+                        negative(
+                                "Cannot wear Light armor"
+                        )
+                );
+            }
+
+            if (!race.canWearMediumArmor()) {
+                lines.add(
+                        negative(
+                                "Cannot wear Medium armor"
+                        )
+                );
+            }
+
+            if (!race.canWearHeavyArmor()) {
+                lines.add(
+                        negative(
+                                "Cannot wear Heavy armor"
+                        )
+                );
+            }
+        }
+
+        boolean hasDarkBonus =
+                !approximately(
+                        race.darkMovementMultiplier(),
+                        1.0
+                )
+                        || !approximately(
+                        race.darkDamageMultiplier(),
+                        1.0
+                );
+
+        if (hasDarkBonus) {
+            StringBuilder text =
+                    new StringBuilder("Darkness:");
+
+            if (!approximately(
+                    race.darkMovementMultiplier(),
+                    1.0
+            )) {
+                text.append(" ")
+                        .append(
+                                signedPercentFromMultiplier(
+                                        race.darkMovementMultiplier()
+                                )
+                        )
+                        .append(" speed");
+            }
+
+            if (!approximately(
+                    race.darkDamageMultiplier(),
+                    1.0
+            )) {
+                if (!approximately(
+                        race.darkMovementMultiplier(),
+                        1.0
+                )) {
+                    text.append(",");
+                }
+
+                text.append(" ")
+                        .append(
+                                signedPercentFromMultiplier(
+                                        race.darkDamageMultiplier()
+                                )
+                        )
+                        .append(" damage");
+            }
+
+            lines.add(
+                    positive(text.toString())
+            );
+        }
+
+        boolean hasBrightPenalty =
+                !approximately(
+                        race.brightDamageMultiplier(),
+                        1.0
+                )
+                        || !race.rangedAllowedInBrightLight();
+
+        if (hasBrightPenalty) {
+            StringBuilder text =
+                    new StringBuilder("Bright light:");
+
+            if (!approximately(
+                    race.brightDamageMultiplier(),
+                    1.0
+            )) {
+                text.append(" ")
+                        .append(
+                                signedPercentFromMultiplier(
+                                        race.brightDamageMultiplier()
+                                )
+                        )
+                        .append(" damage");
+            }
+
+            if (!race.rangedAllowedInBrightLight()) {
+                if (!approximately(
+                        race.brightDamageMultiplier(),
+                        1.0
+                )) {
+                    text.append(",");
+                }
+
+                text.append(" no ranged weapons");
+            }
+
+            lines.add(
+                    negative(text.toString())
+            );
+        }
+
+        boolean hasNetherBonus =
+                !approximately(
+                        race.netherMovementMultiplier(),
+                        1.0
+                )
+                        || !approximately(
+                        race.netherDamageMultiplier(),
+                        1.0
+                );
+
+        if (hasNetherBonus) {
+            StringBuilder text =
+                    new StringBuilder("Nether:");
+
+            if (!approximately(
+                    race.netherMovementMultiplier(),
+                    1.0
+            )) {
+                text.append(" ")
+                        .append(
+                                signedPercentFromMultiplier(
+                                        race.netherMovementMultiplier()
+                                )
+                        )
+                        .append(" speed");
+            }
+
+            if (!approximately(
+                    race.netherDamageMultiplier(),
+                    1.0
+            )) {
+                if (!approximately(
+                        race.netherMovementMultiplier(),
+                        1.0
+                )) {
+                    text.append(",");
+                }
+
+                text.append(" ")
+                        .append(
+                                signedPercentFromMultiplier(
+                                        race.netherDamageMultiplier()
+                                )
+                        )
+                        .append(" damage");
+            }
+
+            lines.add(
+                    positive(text.toString())
+            );
+        }
+
+        if (race.netherMobsNeutral()) {
+            lines.add(
+                    positive(
+                            "Nether mobs are neutral until attacked"
+                    )
+            );
+        }
+
+        if (race.bowNoFalloff()) {
+            lines.add(
+                    positive(
+                            "Bow arrows have no gravity/drop"
+                    )
+            );
+        }
+
+        if (race.crossbowNoFalloff()) {
+            lines.add(
+                    positive(
+                            "Crossbow arrows have no gravity/drop"
+                    )
+            );
+        }
+
+        if (!approximately(
+                race.forestMovementMultiplier(),
+                1.0
+        )) {
+            lines.add(
+                    positive(
+                            "Forests: "
+                                    + signedPercentFromMultiplier(
+                                            race.forestMovementMultiplier()
+                                    )
+                                    + " movement"
+                    )
+            );
+        }
+
+        if (race.leafClimbing()) {
+            lines.add(
+                    positive(
+                            "Leaves: Space climbs, Shift hangs"
+                    )
+            );
+        }
+
+        if (race.crackedIncomingDamageMultiplier() > 1.0
+                && race.crackedDurationTicks() > 0) {
+            lines.add(
+                    negative(
+                            "Pickaxe hits apply Cracked: +"
+                                    + NUMBER.format(
+                                            (race.crackedIncomingDamageMultiplier()
+                                                    - 1.0)
+                                                    * 100.0
+                                    )
+                                    + "% damage taken for "
+                                    + NUMBER.format(
+                                            race.crackedDurationTicks()
+                                                    / 20.0
+                                    )
+                                    + "s"
+                    )
+            );
+        }
+
+        if (race.chargedJumpEnabled()) {
+            lines.add(
+                    positive(
+                            "Charged jump: up to "
+                                    + NUMBER.format(
+                                            race.chargedJumpMaxHeight()
+                                    )
+                                    + " blocks"
+                    )
+            );
+        }
+
+        if (race.glideEnabled()) {
+            lines.add(
+                    positive(
+                            "Hold Space in air to glide"
+                    )
+            );
+        }
+
+        if (!race.rocketFlightBoostAllowed()) {
+            lines.add(
+                    negative(
+                            "Cannot use rockets to boost flight"
+                    )
+            );
+        }
+
+        return lines;
+    }
+
+    private void drawInfoLine(
             GuiGraphicsExtractor graphics,
             int x,
             int y,
-            String name,
-            String value
+            InfoLine line
     ) {
         graphics.text(
                 font,
-                Component.literal(name + ":"),
+                Component.literal("- " + line.text()),
                 x,
                 y,
-                0xFFB8B8B8,
-                false
-        );
-
-        graphics.text(
-                font,
-                Component.literal(value),
-                x + 105,
-                y,
-                0xFFFFFFFF,
+                line.color(),
                 false
         );
     }
 
-    /**
-     * First-time race selection is intentionally mandatory.
-     */
+    private static InfoLine positive(
+            String text
+    ) {
+        return new InfoLine(
+                text,
+                COLOR_POSITIVE
+        );
+    }
+
+    private static InfoLine negative(
+            String text
+    ) {
+        return new InfoLine(
+                text,
+                COLOR_NEGATIVE
+        );
+    }
+
+    private static InfoLine comparison(
+            String text,
+            double value,
+            double baseline
+    ) {
+        return new InfoLine(
+                text,
+                comparisonColor(
+                        value,
+                        baseline
+                )
+        );
+    }
+
+    private static int comparisonColor(
+            double value,
+            double baseline
+    ) {
+        if (value > baseline) {
+            return COLOR_POSITIVE;
+        }
+
+        if (value < baseline) {
+            return COLOR_NEGATIVE;
+        }
+
+        return COLOR_NORMAL;
+    }
+
+    private static int physicalComparisonColor(
+            double value,
+            double baseline
+    ) {
+        /*
+         * Body size itself is not intrinsically a buff or debuff.
+         */
+        return approximately(
+                value,
+                baseline
+        )
+                ? COLOR_NORMAL
+                : COLOR_MIXED;
+    }
+
+    private static boolean isImportantDifference(
+            double value,
+            double baseline
+    ) {
+        if (baseline == 0.0) {
+            return !approximately(
+                    value,
+                    0.0
+            );
+        }
+
+        return Math.abs(
+                value / baseline - 1.0
+        ) >= IMPORTANT_PHYSICAL_DIFFERENCE;
+    }
+
+    private static String signedPercentFromMultiplier(
+            double multiplier
+    ) {
+        return signedPercent(
+                multiplier - 1.0
+        );
+    }
+
+    private static String signedPercent(
+            double fraction
+    ) {
+        double percent =
+                fraction * 100.0;
+
+        String prefix =
+                percent > 0.0
+                        ? "+"
+                        : "";
+
+        return prefix
+                + NUMBER.format(percent)
+                + "%";
+    }
+
+    private static boolean approximately(
+            double a,
+            double b
+    ) {
+        return Math.abs(a - b) <= 0.000001;
+    }
+
+    private record InfoLine(
+            String text,
+            int color
+    ) {
+    }
+
     @Override
     public boolean shouldCloseOnEsc() {
         return false;
@@ -447,8 +1201,7 @@ public final class RaceSelectionScreen extends Screen {
 
     @Override
     public void onClose() {
-        // Intentionally do nothing.
-        // A first-time player must confirm one race.
+        // First-time race selection remains mandatory.
     }
 
     @Override

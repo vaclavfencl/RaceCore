@@ -3,29 +3,18 @@ package com.example.racecore.movement;
 import com.example.racecore.armor.ArmorDefinition;
 import com.example.racecore.armor.ArmorManager;
 import com.example.racecore.armor.ArmorWeight;
+import com.example.racecore.race.RaceDefinition;
+import com.example.racecore.race.RaceManager;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Calculates one combined movement multiplier from currently equipped RaceCore armor.
+ * Calculates one combined movement multiplier from equipped RaceCore armor.
  *
- * Full-set penalties:
- *   LIGHT  -> movement.json
- *   MEDIUM -> movement.json
- *   HEAVY  -> movement.json
- *
- * Slot contribution:
- *   HEAD  15%
- *   CHEST 40%
- *   LEGS  30%
- *   FEET  15%
- *
- * Example:
- * full HEAVY at 0.15 penalty => multiplier 0.85.
- *
- * This class performs no ticking and stores no state. It is only called when
- * an entity joins or NeoForge reports an equipment change.
+ * Race-specific penalty multipliers are applied here, at the actual source of
+ * the armor slowdown. This avoids adding a second compensating speed modifier.
  */
 public final class ArmorMovementCalculator {
     private static final EquipmentSlot[] ARMOR_SLOTS = {
@@ -38,11 +27,19 @@ public final class ArmorMovementCalculator {
     private ArmorMovementCalculator() {
     }
 
-    public static double getMultiplier(LivingEntity entity) {
+    public static double getMultiplier(
+            LivingEntity entity
+    ) {
         double totalPenalty = 0.0;
 
+        RaceDefinition race =
+                entity instanceof Player player
+                        ? RaceManager.getRace(player)
+                        : null;
+
         for (EquipmentSlot slot : ARMOR_SLOTS) {
-            ItemStack stack = entity.getItemBySlot(slot);
+            ItemStack stack =
+                    entity.getItemBySlot(slot);
 
             if (stack.isEmpty()) {
                 continue;
@@ -52,25 +49,51 @@ public final class ArmorMovementCalculator {
                     ArmorManager.getDefinition(stack);
 
             if (definition == null) {
-                // Unknown armor has no RaceCore weight yet.
                 continue;
             }
 
             double fullSetPenalty =
                     fullSetPenalty(definition.weight());
 
+            double racialPenaltyMultiplier =
+                    race == null
+                            ? 1.0
+                            : racialPenaltyMultiplier(
+                                    race,
+                                    definition.weight()
+                            );
+
             totalPenalty +=
-                    fullSetPenalty * slotShare(slot);
+                    fullSetPenalty
+                            * racialPenaltyMultiplier
+                            * slotShare(slot);
         }
 
-        /*
-         * The configured values are nowhere near this limit, but the clamp makes
-         * future custom armor incapable of reducing movement to zero/negative.
-         */
-        return Math.max(0.05, 1.0 - totalPenalty);
+        return Math.max(
+                0.05,
+                1.0 - totalPenalty
+        );
     }
 
-    private static double fullSetPenalty(ArmorWeight weight) {
+    private static double racialPenaltyMultiplier(
+            RaceDefinition race,
+            ArmorWeight weight
+    ) {
+        return switch (weight) {
+            case LIGHT ->
+                    race.lightArmorPenaltyMultiplier();
+
+            case MEDIUM ->
+                    race.mediumArmorPenaltyMultiplier();
+
+            case HEAVY ->
+                    race.heavyArmorPenaltyMultiplier();
+        };
+    }
+
+    private static double fullSetPenalty(
+            ArmorWeight weight
+    ) {
         MovementSettings settings =
                 MovementRegistry.settings();
 
@@ -86,7 +109,9 @@ public final class ArmorMovementCalculator {
         };
     }
 
-    private static double slotShare(EquipmentSlot slot) {
+    private static double slotShare(
+            EquipmentSlot slot
+    ) {
         return switch (slot) {
             case HEAD -> 0.15;
             case CHEST -> 0.40;
@@ -96,7 +121,9 @@ public final class ArmorMovementCalculator {
         };
     }
 
-    public static boolean isArmorSlot(EquipmentSlot slot) {
+    public static boolean isArmorSlot(
+            EquipmentSlot slot
+    ) {
         return slot == EquipmentSlot.HEAD
                 || slot == EquipmentSlot.CHEST
                 || slot == EquipmentSlot.LEGS
