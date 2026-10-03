@@ -15,21 +15,37 @@
     "armor": 6.0,
     "weight": "LIGHT"
   },
+  "minecraft:copper_helmet": {
+    "armor": 8.25,
+    "weight": "MEDIUM"
+  },
+  "minecraft:copper_chestplate": {
+    "armor": 22.0,
+    "weight": "MEDIUM"
+  },
+  "minecraft:copper_leggings": {
+    "armor": 16.5,
+    "weight": "MEDIUM"
+  },
+  "minecraft:copper_boots": {
+    "armor": 8.25,
+    "weight": "MEDIUM"
+  },
   "minecraft:golden_helmet": {
     "armor": 9.0,
-    "weight": "LIGHT"
+    "weight": "HEAVY"
   },
   "minecraft:golden_chestplate": {
     "armor": 24.0,
-    "weight": "LIGHT"
+    "weight": "HEAVY"
   },
   "minecraft:golden_leggings": {
     "armor": 18.0,
-    "weight": "LIGHT"
+    "weight": "HEAVY"
   },
   "minecraft:golden_boots": {
     "armor": 9.0,
-    "weight": "LIGHT"
+    "weight": "HEAVY"
   },
   "minecraft:chainmail_helmet": {
     "armor": 10.5,
