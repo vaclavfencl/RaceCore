@@ -7,6 +7,7 @@ public record RaceDefinition(
         double stepHeight,
         double jumpHeight,
         double movementSpeedMultiplier,
-        double reachMultiplier
+        double reachMultiplier,
+        int enchantmentCapacity
 ) {
 }

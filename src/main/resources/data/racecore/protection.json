@@ -1,0 +1,22 @@
+{
+  "defaultCapacityPerPiece": 4,
+  "universalTypedEffectiveness": 0.4,
+  "enchantments": {
+    "minecraft:protection": {
+      "type": "UNIVERSAL",
+      "pointsPerLevel": 1.0
+    },
+    "minecraft:projectile_protection": {
+      "type": "PROJECTILE",
+      "pointsPerLevel": 1.0
+    },
+    "minecraft:fire_protection": {
+      "type": "FIRE",
+      "pointsPerLevel": 1.0
+    },
+    "minecraft:blast_protection": {
+      "type": "BLAST",
+      "pointsPerLevel": 1.0
+    }
+  }
+}
