@@ -46,6 +46,13 @@ public final class RaceHealthHud {
                     renderRaceCoreHealth(graphics);
                 }
         );
+
+        event.wrapLayer(
+                VanillaGuiLayers.ARMOR_LEVEL,
+                original -> (graphics, partialTick) -> {
+
+                }
+        );
     }
 
     private static void renderRaceCoreHealth(GuiGraphicsExtractor graphics) {
