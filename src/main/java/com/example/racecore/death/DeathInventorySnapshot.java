@@ -7,42 +7,21 @@ import net.minecraft.world.item.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 
-public record DeathInventorySnapshot(
-        List<ItemStack> restoreStacks
-) {
-    public static final Codec<DeathInventorySnapshot> CODEC =
-            RecordCodecBuilder.create(
-                    instance -> instance.group(
-                            ItemStack.OPTIONAL_CODEC
-                                    .listOf()
-                                    .fieldOf("restoreStacks")
-                                    .forGetter(
-                                            DeathInventorySnapshot::restoreStacks
-                                    )
-                    ).apply(
-                            instance,
-                            DeathInventorySnapshot::new
-                    )
-            );
+public record DeathInventorySnapshot(List<ItemStack> restoreStacks) {
+    public static final Codec<DeathInventorySnapshot> CODEC = RecordCodecBuilder.create(
+            instance -> instance.group(
+                    ItemStack.OPTIONAL_CODEC.listOf().fieldOf("restoreStacks").forGetter(DeathInventorySnapshot::restoreStacks)
+            ).apply(instance, DeathInventorySnapshot::new)
+    );
 
     public DeathInventorySnapshot {
-        List<ItemStack> copied =
-                new ArrayList<>(
-                        restoreStacks.size()
-                );
-
-        for (ItemStack stack : restoreStacks) {
-            copied.add(stack.copy());
-        }
-
-        restoreStacks =
-                List.copyOf(copied);
+        List<ItemStack> copied = new ArrayList<>(restoreStacks.size());
+        for (ItemStack stack : restoreStacks) copied.add(stack.copy());
+        restoreStacks = List.copyOf(copied);
     }
 
     public static DeathInventorySnapshot empty() {
-        return new DeathInventorySnapshot(
-                List.of()
-        );
+        return new DeathInventorySnapshot(List.of());
     }
 
     public boolean isEmpty() {
@@ -50,15 +29,8 @@ public record DeathInventorySnapshot(
     }
 
     public List<ItemStack> copyStacks() {
-        List<ItemStack> copied =
-                new ArrayList<>(
-                        restoreStacks.size()
-                );
-
-        for (ItemStack stack : restoreStacks) {
-            copied.add(stack.copy());
-        }
-
+        List<ItemStack> copied = new ArrayList<>(restoreStacks.size());
+        for (ItemStack stack : restoreStacks) copied.add(stack.copy());
         return copied;
     }
 }

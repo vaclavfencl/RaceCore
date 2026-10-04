@@ -7,14 +7,13 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.entity.BarrelBlockEntity;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,343 +21,233 @@ import java.util.List;
 @EventBusSubscriber(modid = RaceCore.MODID)
 public final class DeathInventoryEvents {
     private static final int HOTBAR_SIZE = 9;
-    private DeathInventoryEvents() {
+
+    private DeathInventoryEvents() {}
+
+    @SubscribeEvent
+    public static void onRegisterCommands(RegisterCommandsEvent event) {
+        DeathCommands.register(event.getDispatcher());
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public static void onPlayerDeath(
-            LivingDeathEvent event
-    ) {
-        if (!(event.getEntity()
-                instanceof ServerPlayer player)) {
-            return;
+    public static void onPlayerDeath(LivingDeathEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+
+        DeathInventorySettings settings = DeathInventoryRegistry.settings();
+        if (!settings.enabled()) return;
+        if (!(player.level() instanceof ServerLevel level)) return;
+
+        Inventory inventory = player.getInventory();
+        int inventorySize = inventory.getContainerSize();
+        List<ItemStack> original = copyInventory(inventory);
+        List<ItemStack> barrelContents = copyBarrelSection(original);
+        boolean hasBarrelContents = containsAnyItem(barrelContents);
+
+        BlockPos deathPos = player.blockPosition().immutable();
+        BlockPos barrelPos = null;
+
+        // Empty slots 9-35 => no Death Barrel at all.
+        if (hasBarrelContents) {
+            barrelPos = placeDeathBarrel(player, barrelContents, settings);
         }
 
-        DeathInventorySettings settings =
-                DeathInventoryRegistry.settings();
+        boolean barrelHandled = !hasBarrelContents || barrelPos != null;
+        List<ItemStack> restore = new ArrayList<>(inventorySize);
 
-        if (!settings.enabled()) {
-            return;
-        }
+        for (int slot = 0; slot < inventorySize; slot++) {
+            ItemStack originalStack = original.get(slot);
+            boolean keptSlot = isKeptSlot(slot);
 
-        Inventory inventory =
-                player.getInventory();
-
-        int inventorySize =
-                inventory.getContainerSize();
-
-        List<ItemStack> original =
-                copyInventory(inventory);
-
-        List<ItemStack> chestContents =
-                copyChestSection(original);
-
-        boolean hasChestContents =
-                containsAnyItem(chestContents);
-
-        boolean chestPlaced =
-                !hasChestContents
-                        || placeDeathChest(
-                                player,
-                                chestContents,
-                                settings
-                        );
-
-        List<ItemStack> restore =
-                new ArrayList<>(
-                        inventorySize
-                );
-
-        for (int slot = 0;
-             slot < inventorySize;
-             slot++) {
-
-            ItemStack originalStack =
-                    original.get(slot);
-
-            boolean keptSlot =
-                    isKeptSlot(slot);
-
-            if (keptSlot || !chestPlaced) {
-                restore.add(
-                        originalStack.copy()
-                );
+            // If barrel placement failed, restore everything as the safe fallback.
+            if (keptSlot || !barrelHandled) {
+                restore.add(originalStack.copy());
             } else {
-                restore.add(
-                        ItemStack.EMPTY
-                );
+                restore.add(ItemStack.EMPTY);
             }
         }
 
         player.setData(
                 DeathAttachments.DEATH_INVENTORY,
-                new DeathInventorySnapshot(
-                        restore
-                )
+                new DeathInventorySnapshot(restore)
         );
 
+        player.setData(
+                DeathAttachments.LAST_DEATH,
+                LastDeathLocation.create(level, deathPos, barrelPos)
+        );
+
+        // Prevent vanilla death dropping from duplicating anything.
         clearInventory(inventory);
 
-        if (!chestPlaced) {
+        if (hasBarrelContents && barrelPos == null) {
             RaceCore.LOGGER.warn(
-                    "Could not place a safe death chest for {} at {}. "
-                            + "Full inventory will be restored on respawn.",
+                    "Could not place a safe Death Barrel for {} at {}. Full inventory will be restored on respawn.",
                     player.getGameProfile().name(),
-                    player.blockPosition()
+                    deathPos
             );
         }
     }
 
     @SubscribeEvent
-    public static void onPlayerRespawn(
-            PlayerEvent.PlayerRespawnEvent event
-    ) {
-        if (!(event.getEntity()
-                instanceof ServerPlayer player)) {
-            return;
-        }
+    public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
 
-        DeathInventorySnapshot snapshot =
-                player.getData(
-                        DeathAttachments.DEATH_INVENTORY
-                );
+        DeathInventorySnapshot snapshot = player.getData(DeathAttachments.DEATH_INVENTORY);
 
-        if (snapshot.isEmpty()) {
-            return;
-        }
+        if (!snapshot.isEmpty()) {
+            Inventory inventory = player.getInventory();
+            List<ItemStack> restore = snapshot.copyStacks();
+            int max = Math.min(restore.size(), inventory.getContainerSize());
 
-        Inventory inventory =
-                player.getInventory();
-
-        List<ItemStack> restore =
-                snapshot.copyStacks();
-
-        int max =
-                Math.min(
-                        restore.size(),
-                        inventory.getContainerSize()
-                );
-
-        for (int slot = 0;
-             slot < max;
-             slot++) {
-
-            ItemStack stack =
-                    restore.get(slot);
-
-            if (!stack.isEmpty()) {
-                inventory.setItem(
-                        slot,
-                        stack.copy()
-                );
+            for (int slot = 0; slot < max; slot++) {
+                ItemStack stack = restore.get(slot);
+                if (!stack.isEmpty()) {
+                    inventory.setItem(slot, stack.copy());
+                }
             }
+
+            player.setData(
+                    DeathAttachments.DEATH_INVENTORY,
+                    DeathInventorySnapshot.empty()
+            );
+            player.containerMenu.broadcastChanges();
         }
 
-        player.setData(
-                DeathAttachments.DEATH_INVENTORY,
-                DeathInventorySnapshot.empty()
+        LastDeathLocation location = player.getData(DeathAttachments.LAST_DEATH);
+        if (!location.exists()) return;
+
+        player.sendSystemMessage(
+                Component.literal(
+                        "Last death: " + location.prettyDimension()
+                                + " | X: " + location.deathX()
+                                + " Y: " + location.deathY()
+                                + " Z: " + location.deathZ()
+                )
         );
 
-        player.containerMenu.broadcastChanges();
-    }
-
-    private static List<ItemStack> copyInventory(
-            Inventory inventory
-    ) {
-        List<ItemStack> copied =
-                new ArrayList<>(
-                        inventory.getContainerSize()
-                );
-
-        for (int slot = 0;
-             slot < inventory.getContainerSize();
-             slot++) {
-
-            copied.add(
-                    inventory.getItem(slot).copy()
+        if (location.hasBarrel()) {
+            player.sendSystemMessage(
+                    Component.literal(
+                            "Death Barrel: " + location.prettyDimension()
+                                    + " | X: " + location.barrelX()
+                                    + " Y: " + location.barrelY()
+                                    + " Z: " + location.barrelZ()
+                                    + " | Use /death to show this again."
+                    )
+            );
+        } else {
+            player.sendSystemMessage(
+                    Component.literal("Use /death to show this location again.")
             );
         }
+    }
 
+    private static List<ItemStack> copyInventory(Inventory inventory) {
+        List<ItemStack> copied = new ArrayList<>(inventory.getContainerSize());
+        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+            copied.add(inventory.getItem(slot).copy());
+        }
         return copied;
     }
 
-    private static List<ItemStack> copyChestSection(
-            List<ItemStack> original
-    ) {
-        List<ItemStack> chest =
-                new ArrayList<>(27);
-
-        for (int slot = HOTBAR_SIZE;
-             slot < Inventory.INVENTORY_SIZE;
-             slot++) {
-
-            chest.add(
-                    original.get(slot).copy()
-            );
+    private static List<ItemStack> copyBarrelSection(List<ItemStack> original) {
+        List<ItemStack> barrel = new ArrayList<>(27);
+        for (int slot = HOTBAR_SIZE; slot < Inventory.INVENTORY_SIZE; slot++) {
+            barrel.add(original.get(slot).copy());
         }
-
-        return chest;
+        return barrel;
     }
 
-    private static boolean isKeptSlot(
-            int slot
-    ) {
-        return slot < HOTBAR_SIZE
-                || slot >= Inventory.INVENTORY_SIZE;
+    private static boolean isKeptSlot(int slot) {
+        return slot < HOTBAR_SIZE || slot >= Inventory.INVENTORY_SIZE;
     }
 
-    private static void clearInventory(
-            Inventory inventory
-    ) {
-        for (int slot = 0;
-             slot < inventory.getContainerSize();
-             slot++) {
-
-            inventory.setItem(
-                    slot,
-                    ItemStack.EMPTY
-            );
+    private static void clearInventory(Inventory inventory) {
+        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+            inventory.setItem(slot, ItemStack.EMPTY);
         }
-
         inventory.setChanged();
     }
 
-    private static boolean containsAnyItem(
-            List<ItemStack> stacks
-    ) {
+    private static boolean containsAnyItem(List<ItemStack> stacks) {
         for (ItemStack stack : stacks) {
-            if (!stack.isEmpty()) {
-                return true;
-            }
+            if (!stack.isEmpty()) return true;
         }
-
         return false;
     }
 
-    private static boolean placeDeathChest(
+    private static BlockPos placeDeathBarrel(
             ServerPlayer player,
-            List<ItemStack> chestContents,
+            List<ItemStack> barrelContents,
             DeathInventorySettings settings
     ) {
-        if (!(player.level()
-                instanceof ServerLevel level)) {
-            return false;
-        }
+        if (!(player.level() instanceof ServerLevel level)) return null;
 
-        BlockPos chestPos =
-                findSafeChestPosition(
-                        level,
-                        player.blockPosition(),
-                        settings
-                );
+        BlockPos barrelPos = findSafeBarrelPosition(
+                level,
+                player.blockPosition(),
+                settings
+        );
 
-        if (chestPos == null) {
-            return false;
-        }
+        if (barrelPos == null) return null;
 
         if (!level.setBlock(
-                chestPos,
-                Blocks.CHEST.defaultBlockState(),
+                barrelPos,
+                DeathContent.DEATH_BARREL.get().defaultBlockState(),
                 3
         )) {
-            return false;
+            return null;
         }
 
-        if (!(level.getBlockEntity(chestPos)
-                instanceof ChestBlockEntity chest)) {
-
-            level.removeBlock(
-                    chestPos,
-                    false
-            );
-
-            return false;
+        if (!(level.getBlockEntity(barrelPos) instanceof BarrelBlockEntity barrel)) {
+            level.removeBlock(barrelPos, false);
+            return null;
         }
 
-        for (int slot = 0;
-             slot < chestContents.size();
-             slot++) {
-
-            ItemStack stack =
-                    chestContents.get(slot);
-
+        for (int slot = 0; slot < barrelContents.size(); slot++) {
+            ItemStack stack = barrelContents.get(slot);
             if (!stack.isEmpty()) {
-                chest.setItem(
-                        slot,
-                        stack.copy()
-                );
+                barrel.setItem(slot, stack.copy());
             }
         }
 
-        chest.setChanged();
+        // Stored now for the later private-loot / grace-period system.
+        barrel.setData(
+                DeathAttachments.DEATH_BARREL_OWNER,
+                player.getUUID()
+        );
+        barrel.setChanged();
 
         RaceCore.LOGGER.info(
-                "Placed death chest for {} at {} in {}.",
+                "Placed Death Barrel for {} at {} in {}.",
                 player.getGameProfile().name(),
-                chestPos,
+                barrelPos,
                 level.dimension().identifier()
         );
 
-        return true;
+        return barrelPos.immutable();
     }
 
-    private static BlockPos findSafeChestPosition(
+    private static BlockPos findSafeBarrelPosition(
             ServerLevel level,
             BlockPos origin,
             DeathInventorySettings settings
     ) {
-        int horizontal =
-                settings.horizontalSearchRadius();
+        int horizontal = settings.horizontalSearchRadius();
+        int vertical = settings.verticalSearchRadius();
 
-        int vertical =
-                settings.verticalSearchRadius();
-
-        for (int verticalDistance = 0;
-             verticalDistance <= vertical;
-             verticalDistance++) {
-
+        for (int verticalDistance = 0; verticalDistance <= vertical; verticalDistance++) {
             if (verticalDistance == 0) {
-                BlockPos result =
-                        searchHorizontalLayer(
-                                level,
-                                origin,
-                                0,
-                                horizontal,
-                                settings
-                        );
-
-                if (result != null) {
-                    return result;
-                }
-
+                BlockPos result = searchHorizontalLayer(level, origin, 0, horizontal, settings);
+                if (result != null) return result;
                 continue;
             }
 
-            BlockPos above =
-                    searchHorizontalLayer(
-                            level,
-                            origin,
-                            verticalDistance,
-                            horizontal,
-                            settings
-                    );
+            BlockPos above = searchHorizontalLayer(level, origin, verticalDistance, horizontal, settings);
+            if (above != null) return above;
 
-            if (above != null) {
-                return above;
-            }
-
-            BlockPos below =
-                    searchHorizontalLayer(
-                            level,
-                            origin,
-                            -verticalDistance,
-                            horizontal,
-                            settings
-                    );
-
-            if (below != null) {
-                return below;
-            }
+            BlockPos below = searchHorizontalLayer(level, origin, -verticalDistance, horizontal, settings);
+            if (below != null) return below;
         }
 
         return null;
@@ -371,77 +260,43 @@ public final class DeathInventoryEvents {
             int maxRadius,
             DeathInventorySettings settings
     ) {
-        for (int radius = 0;
-             radius <= maxRadius;
-             radius++) {
-
-            for (int dx = -radius;
-                 dx <= radius;
-                 dx++) {
-
-                for (int dz = -radius;
-                     dz <= radius;
-                     dz++) {
-
+        for (int radius = 0; radius <= maxRadius; radius++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
                     if (radius > 0
                             && Math.abs(dx) != radius
                             && Math.abs(dz) != radius) {
                         continue;
                     }
 
-                    BlockPos candidate =
-                            origin.offset(
-                                    dx,
-                                    yOffset,
-                                    dz
-                            );
-
-                    if (isSafeChestPosition(
-                            level,
-                            candidate,
-                            settings
-                    )) {
+                    BlockPos candidate = origin.offset(dx, yOffset, dz);
+                    if (isSafeBarrelPosition(level, candidate, settings)) {
                         return candidate.immutable();
                     }
                 }
             }
         }
-
         return null;
     }
 
-    private static boolean isSafeChestPosition(
+    private static boolean isSafeBarrelPosition(
             ServerLevel level,
             BlockPos pos,
             DeathInventorySettings settings
     ) {
-        if (!level.isInWorldBounds(pos)
-                || !level.hasChunkAt(pos)) {
-            return false;
-        }
+        if (!level.isInWorldBounds(pos) || !level.hasChunkAt(pos)) return false;
 
-        if (!level.isEmptyBlock(pos)) {
-            return false;
-        }
+        // Never overwrite water/lava/plants/snow/blocks/containers.
+        if (!level.isEmptyBlock(pos)) return false;
 
         if (settings.requireAirAbove()) {
-            BlockPos above =
-                    pos.above();
-
-            if (!level.isInWorldBounds(above)
-                    || !level.isEmptyBlock(above)) {
-                return false;
-            }
+            BlockPos above = pos.above();
+            if (!level.isInWorldBounds(above) || !level.isEmptyBlock(above)) return false;
         }
 
         if (settings.requireSupportBelow()) {
-            BlockPos below =
-                    pos.below();
-
-            if (!level.isInWorldBounds(below)
-                    || level.isEmptyBlock(below)) {
-                return false;
-            }
+            BlockPos below = pos.below();
+            if (!level.isInWorldBounds(below) || level.isEmptyBlock(below)) return false;
         }
 
         return true;
