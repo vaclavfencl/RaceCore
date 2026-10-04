@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "horizontalSearchRadius": 4,
+  "verticalSearchRadius": 3,
+  "requireAirAbove": true,
+  "requireSupportBelow": true
+}

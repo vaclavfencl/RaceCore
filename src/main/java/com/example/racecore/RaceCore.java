@@ -1,5 +1,6 @@
 package com.example.racecore;
 
+import com.example.racecore.death.DeathAttachments;
 import com.example.racecore.race.RaceAttachments;
 import com.example.racecore.race.RaceRegistry;
 import net.neoforged.bus.api.IEventBus;
@@ -15,6 +16,7 @@ public final class RaceCore {
 
     public RaceCore(IEventBus modBus, ModContainer modContainer) {
         RaceAttachments.ATTACHMENT_TYPES.register(modBus);
+        DeathAttachments.ATTACHMENT_TYPES.register(modBus);
         RaceRegistry.load();
 
         LOGGER.info("RaceCore loaded {} race definitions.", RaceRegistry.ids().size());
