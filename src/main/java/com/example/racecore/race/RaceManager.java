@@ -4,6 +4,8 @@ import com.example.racecore.movement.MovementManager;
 import com.example.racecore.stats.VanillaStatScaling;
 import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -40,13 +42,96 @@ public final class RaceManager {
             return false;
         }
 
+        String oldRaceId = getRaceId(player);
+        boolean raceChanged = !oldRaceId.equals(raceId);
+
         player.setData(RaceAttachments.RACE, raceId);
         applyRaceAttributes(player, race);
+
+        /*
+         * On an actual race change:
+         * - a non-Night-Vision race removes Night Vision;
+         * - a Night-Vision race receives the infinite racial passive.
+         *
+         * Re-selecting the same race does not delete a normal potion effect.
+         */
+        syncPermanentNightVision(
+                player,
+                race,
+                raceChanged
+        );
+
         return true;
     }
 
     public static void applyCurrentRace(ServerPlayer player) {
-        applyRaceAttributes(player, getRace(player));
+        RaceDefinition race =
+                getRace(player);
+
+        applyRaceAttributes(
+                player,
+                race
+        );
+
+        /*
+         * Login / respawn / dimension change:
+         * make sure racial Night Vision exists, but do not remove legitimate
+         * potion Night Vision from races that do not own the passive.
+         */
+        syncPermanentNightVision(
+                player,
+                race,
+                false
+        );
+    }
+
+    /**
+     * Adds the racial Night Vision passive only when it is missing.
+     *
+     * The effect uses Minecraft's real INFINITE_DURATION, so there is no
+     * low-duration flashing/flicker.
+     */
+    public static void ensurePermanentNightVision(
+            Player player,
+            RaceDefinition race
+    ) {
+        if (!race.permanentNightVision()
+                || player.hasEffect(
+                        MobEffects.NIGHT_VISION
+                )) {
+            return;
+        }
+
+        player.addEffect(
+                new MobEffectInstance(
+                        MobEffects.NIGHT_VISION,
+                        MobEffectInstance.INFINITE_DURATION,
+                        0,
+                        true,
+                        false,
+                        false
+                )
+        );
+    }
+
+    private static void syncPermanentNightVision(
+            ServerPlayer player,
+            RaceDefinition race,
+            boolean removeIfDisabled
+    ) {
+        if (race.permanentNightVision()) {
+            ensurePermanentNightVision(
+                    player,
+                    race
+            );
+            return;
+        }
+
+        if (removeIfDisabled) {
+            player.removeEffect(
+                    MobEffects.NIGHT_VISION
+            );
+        }
     }
 
     private static void applyRaceAttributes(
@@ -98,10 +183,6 @@ public final class RaceManager {
         double oldMaxHealth = player.getMaxHealth();
         float oldHealth = player.getHealth();
 
-        /*
-         * races.json stores final RaceCore HP.
-         * VanillaStatScaling supplies the global x5 max-health modifier.
-         */
         maxHealth.setBaseValue(
                 race.maxHealth() / VanillaStatScaling.SCALE
         );
@@ -109,15 +190,10 @@ public final class RaceManager {
         scale.setBaseValue(race.scale());
         stepHeight.setBaseValue(race.stepHeight());
 
-        /*
-         * Movement is now owned by MovementManager.
-         *
-         * It applies:
-         *   global multiplier x race multiplier
-         *
-         * Step 3C will add armor weight as another independent layer.
-         */
-        MovementManager.applyMovement(player, race);
+        MovementManager.applyMovement(
+                player,
+                race
+        );
 
         blockReach.setBaseValue(
                 Player.DEFAULT_BLOCK_INTERACTION_RANGE
@@ -129,23 +205,14 @@ public final class RaceManager {
                         * race.reachMultiplier()
         );
 
-        /*
-         * Native Minecraft fall-damage threshold.
-         *
-         * Vanilla baseline is 3.0:
-         *   <= 3 blocks safe
-         *   4+ blocks starts dealing fall damage
-         *
-         * RaceCore changes the BASE value, so equipment/effects using
-         * SAFE_FALL_DISTANCE attribute modifiers can still stack normally.
-         */
         safeFallDistance.setBaseValue(
                 race.safeFallDistance()
         );
 
         // Changing race is not a free heal.
         if (oldMaxHealth > 0.0) {
-            double healthRatio = oldHealth / oldMaxHealth;
+            double healthRatio =
+                    oldHealth / oldMaxHealth;
 
             float newHealth =
                     (float) (

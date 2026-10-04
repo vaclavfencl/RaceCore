@@ -14,7 +14,6 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageTypes;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -366,10 +365,11 @@ public final class RaceAbilityEvents {
     }
 
     /**
-     * Any race can opt into permanent Night Vision by setting
-     * permanentNightVision=true.
+     * Generic player-tick abilities.
      *
-     * It refreshes only every five seconds; no heavy per-tick calculation.
+     * Racial Night Vision is now a true infinite effect. This tick handler only
+     * checks whether it is missing (for example after drinking milk) and
+     * reapplies it when necessary.
      */
     @SubscribeEvent
     public static void onPlayerTick(
@@ -420,18 +420,18 @@ public final class RaceAbilityEvents {
             );
         }
 
-        if (player.tickCount % 100 == 0
-                && race.permanentNightVision()) {
+        /*
+         * Normally this is a no-op because the racial effect is infinite.
+         * If milk / effect clearing removes it, it is restored immediately.
+         */
+        if (race.permanentNightVision()
+                && !player.hasEffect(
+                        MobEffects.NIGHT_VISION
+                )) {
 
-            player.addEffect(
-                    new MobEffectInstance(
-                            MobEffects.NIGHT_VISION,
-                            220,
-                            0,
-                            true,
-                            false,
-                            false
-                    )
+            RaceManager.ensurePermanentNightVision(
+                    player,
+                    race
             );
         }
     }
