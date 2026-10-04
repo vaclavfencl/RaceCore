@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "maxQualityWeightRatio": 20.0,
+  "bonusDiscoveryRollsPerLuck": 0.2,
+  "quantityBonusPerLuck": 0.05,
+  "maxBonusDiscoveryRolls": 8,
+  "maxQuantityMultiplier": 3.0,
+  "enabledPathPrefixes": [
+    "chests/",
+    "entities/",
+    "gameplay/fishing"
+  ],
+  "qualityOverrides": {}
+}

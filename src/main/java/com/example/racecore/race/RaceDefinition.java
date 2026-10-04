@@ -28,6 +28,7 @@ public record RaceDefinition(
 
         // Economy / progression
         double xpBonus,
+        double lootLuck,
 
         // Mining / drops
         double miningSpeedMultiplier,

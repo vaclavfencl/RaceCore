@@ -2,6 +2,7 @@ package com.example.racecore;
 
 import com.example.racecore.death.DeathAttachments;
 import com.example.racecore.death.DeathContent;
+import com.example.racecore.loot.LootLuckContent;
 import com.example.racecore.race.RaceAttachments;
 import com.example.racecore.race.RaceRegistry;
 import net.neoforged.bus.api.IEventBus;
@@ -19,6 +20,7 @@ public final class RaceCore {
         RaceAttachments.ATTACHMENT_TYPES.register(modBus);
         DeathAttachments.ATTACHMENT_TYPES.register(modBus);
         DeathContent.register(modBus);
+        LootLuckContent.register(modBus);
         RaceRegistry.load();
 
         LOGGER.info("RaceCore loaded {} race definitions.", RaceRegistry.ids().size());

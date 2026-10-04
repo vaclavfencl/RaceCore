@@ -4,14 +4,22 @@ import com.example.racecore.movement.MovementManager;
 import com.example.racecore.stats.VanillaStatScaling;
 import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 
 public final class RaceManager {
+    private static final Identifier RACE_LOOT_LUCK_ID =
+            Identifier.fromNamespaceAndPath(
+                    "racecore",
+                    "race_loot_luck"
+            );
+
     private RaceManager() {
     }
 
@@ -180,6 +188,13 @@ public final class RaceManager {
                         "safe_fall_distance"
                 );
 
+        AttributeInstance luck =
+                requireAttribute(
+                        player,
+                        Attributes.LUCK,
+                        "luck"
+                );
+
         double oldMaxHealth = player.getMaxHealth();
         float oldHealth = player.getHealth();
 
@@ -208,6 +223,27 @@ public final class RaceManager {
         safeFallDistance.setBaseValue(
                 race.safeFallDistance()
         );
+
+        /*
+         * RaceCore uses Minecraft's real generic Luck attribute.
+         *
+         * The racial value is an ADD_VALUE transient modifier so future
+         * potions, trinkets and other mods can stack Luck normally without
+         * RaceCore owning the attribute's base value.
+         */
+        luck.removeModifier(
+                RACE_LOOT_LUCK_ID
+        );
+
+        if (race.lootLuck() > 0.0) {
+            luck.addTransientModifier(
+                    new AttributeModifier(
+                            RACE_LOOT_LUCK_ID,
+                            race.lootLuck(),
+                            AttributeModifier.Operation.ADD_VALUE
+                    )
+            );
+        }
 
         // Changing race is not a free heal.
         if (oldMaxHealth > 0.0) {

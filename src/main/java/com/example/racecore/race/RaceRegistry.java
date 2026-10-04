@@ -212,6 +212,7 @@ public final class RaceRegistry {
         }
 
         requireNonNegativeFinite(id, "xpBonus", race.xpBonus());
+        requireNonNegativeFinite(id, "lootLuck", race.lootLuck());
         requirePositiveFinite(
                 id,
                 "miningSpeedMultiplier",

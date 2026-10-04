@@ -9,6 +9,7 @@
     "safeFallDistance": 3.0,
     "enchantmentCapacity": 4,
     "xpBonus": 0.0,
+    "lootLuck": 0.0,
     "miningSpeedMultiplier": 1.0,
     "fortuneBonus": 0,
     "cropFortuneBonus": 0,
@@ -192,7 +193,8 @@
     "reachMultiplier": 1.0,
     "enchantmentCapacity": 4,
     "permanentNightVision": true,
-    "outgoingDamageMultiplier": 0.85
+    "outgoingDamageMultiplier": 0.85,
+    "lootLuck": 10.0
   },
   "tiefling": {
     "displayName": "Tiefling",
