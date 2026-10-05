@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "C": "minecraft:copper_ingot",
+    "D": "minecraft:cobbled_deepslate",
+    "F": "minecraft:furnace"
+  },
+  "pattern": [
+    "CCC",
+    "CFC",
+    "DDD"
+  ],
+  "result": {
+    "id": "minecraft:blast_furnace"
+  }
+}

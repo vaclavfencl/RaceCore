@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:smelting",
+  "cookingtime": 200,
+  "experience": 0.0,
+  "group": "racecore_disabled_iron_smelting",
+  "ingredient": "minecraft:structure_void",
+  "result": {
+    "id": "minecraft:iron_ingot"
+  }
+}
