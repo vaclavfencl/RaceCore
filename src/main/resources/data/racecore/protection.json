@@ -1,9 +1,9 @@
 {
   "defaultCapacityPerPiece": 4,
-  "universalTypedEffectiveness": 0.4,
+  "universalTypedEffectiveness": 0.0,
   "enchantments": {
     "minecraft:protection": {
-      "type": "UNIVERSAL",
+      "type": "MELEE",
       "pointsPerLevel": 1.0
     },
     "minecraft:projectile_protection": {

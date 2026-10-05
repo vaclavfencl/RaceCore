@@ -15,105 +15,105 @@
     "armor": 6.0,
     "weight": "LIGHT"
   },
-  "minecraft:copper_helmet": {
-    "armor": 8.25,
-    "weight": "MEDIUM"
-  },
-  "minecraft:copper_chestplate": {
-    "armor": 22.0,
-    "weight": "MEDIUM"
-  },
-  "minecraft:copper_leggings": {
-    "armor": 16.5,
-    "weight": "MEDIUM"
-  },
-  "minecraft:copper_boots": {
-    "armor": 8.25,
-    "weight": "MEDIUM"
-  },
-  "minecraft:golden_helmet": {
-    "armor": 11.25,
-    "weight": "HEAVY",
-    "protectionCapacityBonus": 1
-  },
-  "minecraft:golden_chestplate": {
-    "armor": 30.0,
-    "weight": "HEAVY",
-    "protectionCapacityBonus": 1
-  },
-  "minecraft:golden_leggings": {
-    "armor": 22.5,
-    "weight": "HEAVY",
-    "protectionCapacityBonus": 1
-  },
-  "minecraft:golden_boots": {
-    "armor": 11.25,
-    "weight": "HEAVY",
-    "protectionCapacityBonus": 1
-  },
   "minecraft:chainmail_helmet": {
-    "armor": 10.5,
+    "armor": 8.25,
     "weight": "MEDIUM"
   },
   "minecraft:chainmail_chestplate": {
-    "armor": 28.0,
+    "armor": 22.0,
     "weight": "MEDIUM"
   },
   "minecraft:chainmail_leggings": {
-    "armor": 21.0,
+    "armor": 16.5,
     "weight": "MEDIUM"
   },
   "minecraft:chainmail_boots": {
-    "armor": 10.5,
+    "armor": 8.25,
     "weight": "MEDIUM"
+  },
+  "minecraft:copper_helmet": {
+    "armor": 9.75,
+    "weight": "MEDIUM"
+  },
+  "minecraft:copper_chestplate": {
+    "armor": 26.0,
+    "weight": "MEDIUM"
+  },
+  "minecraft:copper_leggings": {
+    "armor": 19.5,
+    "weight": "MEDIUM"
+  },
+  "minecraft:copper_boots": {
+    "armor": 9.75,
+    "weight": "MEDIUM"
+  },
+  "minecraft:golden_helmet": {
+    "armor": 9.0,
+    "weight": "HEAVY",
+    "utilityCapacityBonus": 2
+  },
+  "minecraft:golden_chestplate": {
+    "armor": 24.0,
+    "weight": "HEAVY",
+    "utilityCapacityBonus": 2
+  },
+  "minecraft:golden_leggings": {
+    "armor": 18.0,
+    "weight": "HEAVY",
+    "utilityCapacityBonus": 2
+  },
+  "minecraft:golden_boots": {
+    "armor": 9.0,
+    "weight": "HEAVY",
+    "utilityCapacityBonus": 2
   },
   "minecraft:iron_helmet": {
-    "armor": 12.75,
-    "weight": "MEDIUM"
+    "armor": 12.0,
+    "weight": "HEAVY"
   },
   "minecraft:iron_chestplate": {
-    "armor": 34.0,
-    "weight": "MEDIUM"
+    "armor": 32.0,
+    "weight": "HEAVY"
   },
   "minecraft:iron_leggings": {
-    "armor": 25.5,
-    "weight": "MEDIUM"
+    "armor": 24.0,
+    "weight": "HEAVY"
   },
   "minecraft:iron_boots": {
-    "armor": 12.75,
-    "weight": "MEDIUM"
+    "armor": 12.0,
+    "weight": "HEAVY"
   },
   "minecraft:diamond_helmet": {
-    "armor": 16.5,
-    "weight": "HEAVY"
+    "armor": 18.0,
+    "weight": "MEDIUM"
   },
   "minecraft:diamond_chestplate": {
-    "armor": 44.0,
-    "weight": "HEAVY"
+    "armor": 48.0,
+    "weight": "MEDIUM"
   },
   "minecraft:diamond_leggings": {
-    "armor": 33.0,
-    "weight": "HEAVY"
+    "armor": 36.0,
+    "weight": "MEDIUM"
   },
   "minecraft:diamond_boots": {
-    "armor": 16.5,
-    "weight": "HEAVY"
+    "armor": 18.0,
+    "weight": "MEDIUM"
   },
   "minecraft:netherite_helmet": {
-    "armor": 18.75,
-    "weight": "HEAVY"
+    "armor": 30.0,
+    "weight": "ULTRA_HEAVY"
   },
   "minecraft:netherite_chestplate": {
-    "armor": 50.0,
-    "weight": "HEAVY"
+    "armor": 80.0,
+    "weight": "ULTRA_HEAVY"
   },
   "minecraft:netherite_leggings": {
-    "armor": 37.5,
-    "weight": "HEAVY"
+    "armor": 60.0,
+    "weight": "ULTRA_HEAVY"
   },
   "minecraft:netherite_boots": {
-    "armor": 18.75,
-    "weight": "HEAVY"
+    "armor": 30.0,
+    "weight": "ULTRA_HEAVY"
   },
   "minecraft:turtle_helmet": {
     "armor": 12.75,
