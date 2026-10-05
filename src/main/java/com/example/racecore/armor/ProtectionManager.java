@@ -28,12 +28,8 @@ public final class ProtectionManager {
     }
 
     /**
-     * Players use their race-specific capacity from races.json.
-     *
-     * Non-player living entities use the general default from protection.json.
-     *
-     * A race value <= 0 falls back to the general default, which keeps the
-     * system safe while editing/migrating race JSON.
+     * Players use their race-specific base capacity from races.json.
+     * Non-player living entities use the default from protection.json.
      */
     public static int getCapacityPerPiece(LivingEntity entity) {
         int defaultCapacity =
@@ -51,6 +47,32 @@ public final class ProtectionManager {
         return defaultCapacity;
     }
 
+    /**
+     * Returns the actual Protection capacity for one equipped armor piece:
+     *
+     *     race/default capacity + material bonus
+     *
+     * Gold armor currently uses +1. Most armor uses +0.
+     */
+    public static int getCapacityForPiece(
+            LivingEntity entity,
+            ItemStack stack
+    ) {
+        int capacity = getCapacityPerPiece(entity);
+
+        ArmorDefinition definition =
+                ArmorManager.getDefinition(stack);
+
+        if (definition != null) {
+            capacity += Math.max(
+                    0,
+                    definition.protectionCapacityBonus()
+            );
+        }
+
+        return capacity;
+    }
+
     public static double getTotalProtection(
             LivingEntity entity,
             ProtectionType damageType
@@ -58,9 +80,6 @@ public final class ProtectionManager {
         if (entity == null || damageType == null) {
             return 0.0;
         }
-
-        int capacityPerPiece =
-                getCapacityPerPiece(entity);
 
         double total = 0.0;
 
@@ -71,9 +90,15 @@ public final class ProtectionManager {
                 continue;
             }
 
+            int capacityForPiece =
+                    getCapacityForPiece(entity, stack);
+
             total += Math.min(
-                    capacityPerPiece,
-                    getProtectionForSinglePiece(stack, damageType)
+                    capacityForPiece,
+                    getProtectionForSinglePiece(
+                            stack,
+                            damageType
+                    )
             );
         }
 
@@ -95,11 +120,6 @@ public final class ProtectionManager {
         for (Object2IntMap.Entry<Holder<Enchantment>> entry
                 : enchantments.entrySet()) {
 
-            /*
-             * Minecraft/NeoForge 26.2:
-             * Enchantments are dynamic-registry entries, so use the Holder's
-             * ResourceKey directly. ResourceKey uses identifier() in 26.2.
-             */
             Identifier enchantmentId =
                     entry.getKey()
                             .unwrapKey()
@@ -111,7 +131,9 @@ public final class ProtectionManager {
             }
 
             ProtectionEnchantmentDefinition definition =
-                    ProtectionRegistry.get(enchantmentId.toString());
+                    ProtectionRegistry.get(
+                            enchantmentId.toString()
+                    );
 
             if (definition == null) {
                 continue;
@@ -119,11 +141,9 @@ public final class ProtectionManager {
 
             double effectiveness;
 
-            if (definition.type() == ProtectionType.UNIVERSAL) {
-                /*
-                 * Generic Protection is fully effective against melee, but
-                 * only partially effective against typed damage.
-                 */
+            if (definition.type()
+                    == ProtectionType.UNIVERSAL) {
+
                 if (damageType == ProtectionType.MELEE) {
                     effectiveness = 1.0;
                 } else {
@@ -132,12 +152,12 @@ public final class ProtectionManager {
                                     .universalTypedEffectiveness();
                 }
 
-            } else if (definition.type() == damageType) {
-                // Specialized Protection is fully effective.
+            } else if (definition.type()
+                    == damageType) {
+
                 effectiveness = 1.0;
 
             } else {
-                // This enchantment does not apply to this damage category.
                 continue;
             }
 

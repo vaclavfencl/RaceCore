@@ -32,20 +32,24 @@
     "weight": "MEDIUM"
   },
   "minecraft:golden_helmet": {
-    "armor": 9.0,
-    "weight": "HEAVY"
+    "armor": 11.25,
+    "weight": "HEAVY",
+    "protectionCapacityBonus": 1
   },
   "minecraft:golden_chestplate": {
-    "armor": 24.0,
-    "weight": "HEAVY"
+    "armor": 30.0,
+    "weight": "HEAVY",
+    "protectionCapacityBonus": 1
   },
   "minecraft:golden_leggings": {
-    "armor": 18.0,
-    "weight": "HEAVY"
+    "armor": 22.5,
+    "weight": "HEAVY",
+    "protectionCapacityBonus": 1
   },
   "minecraft:golden_boots": {
-    "armor": 9.0,
-    "weight": "HEAVY"
+    "armor": 11.25,
+    "weight": "HEAVY",
+    "protectionCapacityBonus": 1
   },
   "minecraft:chainmail_helmet": {
     "armor": 10.5,

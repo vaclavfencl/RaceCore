@@ -6,7 +6,6 @@ import com.example.racecore.armor.ArmorManager;
 import com.example.racecore.armor.ArmorWeight;
 import com.example.racecore.armor.ProtectionManager;
 import com.example.racecore.movement.MovementRegistry;
-import com.example.racecore.movement.MovementSettings;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
@@ -28,16 +27,24 @@ import java.util.Locale;
  * Replaces misleading vanilla armor/toughness tooltip numbers on mapped
  * RaceCore armor and shows the values RaceCore actually uses.
  */
-@EventBusSubscriber(modid = RaceCore.MODID, value = Dist.CLIENT)
+@EventBusSubscriber(
+        modid = RaceCore.MODID,
+        value = Dist.CLIENT
+)
 public final class ArmorTooltipEvents {
     private static final DecimalFormat NUMBER_FORMAT;
 
     static {
         DecimalFormatSymbols symbols =
-                DecimalFormatSymbols.getInstance(Locale.ROOT);
+                DecimalFormatSymbols.getInstance(
+                        Locale.ROOT
+                );
 
         NUMBER_FORMAT =
-                new DecimalFormat("0.###", symbols);
+                new DecimalFormat(
+                        "0.###",
+                        symbols
+                );
     }
 
     private ArmorTooltipEvents() {
@@ -110,7 +117,7 @@ public final class ArmorTooltipEvents {
                                                 "-"
                                                         + NUMBER_FORMAT.format(
                                                         movementPenalty
-                                                        * 100.0
+                                                                * 100.0
                                                 )
                                                         + "%"
                                         )
@@ -121,11 +128,10 @@ public final class ArmorTooltipEvents {
         );
 
         int protectionCapacity =
-                event.getEntity() == null
-                        ? ProtectionManager.getCapacityPerPiece(null)
-                        : ProtectionManager.getCapacityPerPiece(
-                                event.getEntity()
-                        );
+                ProtectionManager.getCapacityForPiece(
+                        event.getEntity(),
+                        stack
+                );
 
         tooltip.add(
                 Component.literal("Protection Cap: ")
@@ -141,13 +147,24 @@ public final class ArmorTooltipEvents {
                                         )
                         )
         );
+
+        if (definition.protectionCapacityBonus() > 0) {
+            tooltip.add(
+                    Component.literal("Material Enchanting Bonus: ")
+                            .withStyle(ChatFormatting.GRAY)
+                            .append(
+                                    Component.literal(
+                                                    "+"
+                                                            + definition.protectionCapacityBonus()
+                                            )
+                                            .withStyle(
+                                                    ChatFormatting.LIGHT_PURPLE
+                                            )
+                            )
+            );
+        }
     }
 
-    /**
-     * Vanilla still reports its own ARMOR and ARMOR_TOUGHNESS attributes even
-     * though RaceCore no longer uses them for mitigation. Remove those lines,
-     * but keep unrelated vanilla lines such as knockback resistance.
-     */
     private static void removeVanillaArmorLines(
             List<Component> tooltip
     ) {

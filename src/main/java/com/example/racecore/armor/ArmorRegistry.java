@@ -35,10 +35,6 @@ public final class ArmorRegistry {
     private ArmorRegistry() {
     }
 
-    /**
-     * Explicit load method if we later choose to initialize this during mod startup.
-     * Calling it more than once is safe.
-     */
     public static synchronized void load() {
         if (loaded) {
             return;
@@ -46,36 +42,54 @@ public final class ArmorRegistry {
 
         String path = "/data/" + RaceCore.MODID + "/armor.json";
 
-        try (InputStream stream = ArmorRegistry.class.getResourceAsStream(path)) {
+        try (InputStream stream =
+                     ArmorRegistry.class.getResourceAsStream(path)) {
+
             if (stream == null) {
                 throw new IllegalStateException(
-                        "Missing armor definition file: " + path);
+                        "Missing armor definition file: " + path
+                );
             }
 
             try (InputStreamReader reader =
-                         new InputStreamReader(stream, StandardCharsets.UTF_8)) {
+                         new InputStreamReader(
+                                 stream,
+                                 StandardCharsets.UTF_8
+                         )) {
 
                 Map<String, ArmorDefinition> parsed =
                         GSON.fromJson(reader, ARMOR_MAP_TYPE);
 
                 if (parsed == null || parsed.isEmpty()) {
                     throw new IllegalStateException(
-                            "No armor definitions were found in " + path);
+                            "No armor definitions were found in "
+                                    + path
+                    );
                 }
 
                 Map<String, ArmorDefinition> validated =
                         new LinkedHashMap<>();
 
-                for (Map.Entry<String, ArmorDefinition> entry : parsed.entrySet()) {
-                    String itemId = normalizeItemId(entry.getKey());
-                    ArmorDefinition definition = entry.getValue();
+                for (Map.Entry<String, ArmorDefinition> entry
+                        : parsed.entrySet()) {
+
+                    String itemId =
+                            normalizeItemId(entry.getKey());
+
+                    ArmorDefinition definition =
+                            entry.getValue();
 
                     validate(itemId, definition);
 
-                    if (validated.put(itemId, definition) != null) {
+                    if (validated.put(
+                            itemId,
+                            definition
+                    ) != null) {
+
                         throw new IllegalStateException(
                                 "Duplicate armor item id after normalization: "
-                                        + itemId);
+                                        + itemId
+                        );
                     }
                 }
 
@@ -106,39 +120,65 @@ public final class ArmorRegistry {
             String itemId,
             ArmorDefinition definition
     ) {
-        if (itemId.isBlank() || !itemId.contains(":")) {
+        if (itemId.isBlank()
+                || !itemId.contains(":")) {
+
             throw new IllegalStateException(
-                    "Invalid armor item id: '" + itemId + "'");
+                    "Invalid armor item id: '"
+                            + itemId
+                            + "'"
+            );
         }
 
         if (definition == null) {
             throw new IllegalStateException(
-                    "Armor item '" + itemId + "' has no definition.");
+                    "Armor item '"
+                            + itemId
+                            + "' has no definition."
+            );
         }
 
         if (!Double.isFinite(definition.armor())
                 || definition.armor() < 0.0) {
 
             throw new IllegalStateException(
-                    "Armor item '" + itemId
+                    "Armor item '"
+                            + itemId
                             + "' has invalid armor value: "
-                            + definition.armor());
+                            + definition.armor()
+            );
         }
 
         if (definition.weight() == null) {
             throw new IllegalStateException(
-                    "Armor item '" + itemId + "' has no weight class.");
+                    "Armor item '"
+                            + itemId
+                            + "' has no weight class."
+            );
+        }
+
+        if (definition.protectionCapacityBonus() < 0) {
+            throw new IllegalStateException(
+                    "Armor item '"
+                            + itemId
+                            + "' has invalid protectionCapacityBonus: "
+                            + definition.protectionCapacityBonus()
+            );
         }
     }
 
     public static ArmorDefinition get(String itemId) {
         ensureLoaded();
-        return DEFINITIONS.get(normalizeItemId(itemId));
+        return DEFINITIONS.get(
+                normalizeItemId(itemId)
+        );
     }
 
     public static boolean contains(String itemId) {
         ensureLoaded();
-        return DEFINITIONS.containsKey(normalizeItemId(itemId));
+        return DEFINITIONS.containsKey(
+                normalizeItemId(itemId)
+        );
     }
 
     public static int size() {
@@ -148,12 +188,17 @@ public final class ArmorRegistry {
 
     public static Map<String, ArmorDefinition> all() {
         ensureLoaded();
-        return Collections.unmodifiableMap(DEFINITIONS);
+        return Collections.unmodifiableMap(
+                DEFINITIONS
+        );
     }
 
-    private static String normalizeItemId(String itemId) {
+    private static String normalizeItemId(
+            String itemId
+    ) {
         return itemId == null
                 ? ""
-                : itemId.trim().toLowerCase(Locale.ROOT);
+                : itemId.trim()
+                        .toLowerCase(Locale.ROOT);
     }
 }
