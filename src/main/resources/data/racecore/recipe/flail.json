@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "minecraft:iron_ingot",
+    "minecraft:iron_chain",
+    "minecraft:stick"
+  ],
+  "result": {
+    "id": "racecore:flail"
+  }
+}

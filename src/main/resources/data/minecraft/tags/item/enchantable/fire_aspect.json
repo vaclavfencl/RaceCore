@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "racecore:dagger",
+    "racecore:glaive",
+    "racecore:longsword",
+    "racecore:club",
+    "racecore:flail"
+  ]
+}

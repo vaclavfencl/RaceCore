@@ -1,5 +1,6 @@
 package com.example.racecore.armor;
 
+import com.example.racecore.crafting.CraftedEquipmentManager;
 import com.example.racecore.durability.BrokenItemManager;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
@@ -21,11 +22,12 @@ public final class ArmorManager {
 
         if (definition == null
                 || BrokenItemManager.isBroken(stack)) {
-
             return 0.0;
         }
 
-        return definition.armor();
+        return definition.armor()
+                + CraftedEquipmentManager
+                .getArmorBonus(stack);
     }
 
     public static ArmorWeight getWeight(ItemStack stack) {
@@ -53,12 +55,10 @@ public final class ArmorManager {
                 continue;
             }
 
-            /*
-             * Broken armor still physically weighs something if the player
-             * insists on wearing it, but it gives no damage reduction.
-             */
             if (!BrokenItemManager.isBroken(stack)) {
-                armor += definition.armor();
+                armor += definition.armor()
+                        + CraftedEquipmentManager
+                        .getArmorBonus(stack);
             }
 
             switch (definition.weight()) {

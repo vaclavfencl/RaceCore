@@ -5,6 +5,7 @@ import com.example.racecore.death.DeathContent;
 import com.example.racecore.loot.LootLuckContent;
 import com.example.racecore.race.RaceAttachments;
 import com.example.racecore.race.RaceRegistry;
+import com.example.racecore.weapon.RaceCoreWeapons;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -21,6 +22,7 @@ public final class RaceCore {
         DeathAttachments.ATTACHMENT_TYPES.register(modBus);
         DeathContent.register(modBus);
         LootLuckContent.register(modBus);
+        RaceCoreWeapons.register(modBus);
         RaceRegistry.load();
 
         LOGGER.info("RaceCore loaded {} race definitions.", RaceRegistry.ids().size());

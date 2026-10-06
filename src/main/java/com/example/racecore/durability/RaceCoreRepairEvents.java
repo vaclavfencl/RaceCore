@@ -1,26 +1,18 @@
 package com.example.racecore.durability;
 
 import com.example.racecore.RaceCore;
+import com.example.racecore.weapon.RaceCoreWeapons;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.AnvilUpdateEvent;
 
-/**
- * RaceCore material repair path.
- *
- * Full repair is targeted at roughly 40% of the item's original material
- * investment. Because Minecraft materials are indivisible items, very cheap
- * recipes necessarily have coarser repair steps.
- *
- * This path always resets vanilla prior-work cost, so supported gear can
- * always be repaired and never becomes "Too Expensive" merely from repairs.
- */
 @EventBusSubscriber(modid = RaceCore.MODID)
 public final class RaceCoreRepairEvents {
     private static final double FULL_REPAIR_MATERIAL_FRACTION =
@@ -42,7 +34,6 @@ public final class RaceCoreRepairEvents {
         if (!BrokenItemManager.isSupported(left)
                 || left.getDamageValue() <= 0
                 || right.isEmpty()) {
-
             return;
         }
 
@@ -54,7 +45,6 @@ public final class RaceCoreRepairEvents {
                         left,
                         right
                 )) {
-
             return;
         }
 
@@ -75,7 +65,6 @@ public final class RaceCoreRepairEvents {
 
         if (maxDamage <= 0
                 || currentDamage <= 0) {
-
             return;
         }
 
@@ -124,21 +113,14 @@ public final class RaceCoreRepairEvents {
 
         if (output.getDamageValue()
                 < output.getMaxDamage() - 1) {
-
             BrokenItemManager
                     .clearBroken(output);
         }
 
-        /*
-         * Remove vanilla's exponential prior-work penalty from the result.
-         */
         output.remove(
                 DataComponents.REPAIR_COST
         );
 
-        /*
-         * Preserve an optional rename performed in the same anvil action.
-         */
         String name =
                 event.getName();
 
@@ -164,6 +146,31 @@ public final class RaceCoreRepairEvents {
             ItemStack gear,
             ItemStack repair
     ) {
+        if (gear.is(
+                RaceCoreWeapons.CLUB.get()
+        )) {
+            return repair.is(
+                    ItemTags.PLANKS
+            );
+        }
+
+        if (gear.is(
+                RaceCoreWeapons.DAGGER.get()
+        )
+                || gear.is(
+                RaceCoreWeapons.GLAIVE.get()
+        )
+                || gear.is(
+                RaceCoreWeapons.LONGSWORD.get()
+        )
+                || gear.is(
+                RaceCoreWeapons.FLAIL.get()
+        )) {
+            return repair.is(
+                    Items.IRON_INGOT
+            );
+        }
+
         Identifier id =
                 BuiltInRegistries.ITEM
                         .getKeyOrNull(
@@ -177,20 +184,12 @@ public final class RaceCoreRepairEvents {
         String path =
                 id.getPath();
 
-        /*
-         * Chainmail is crafted from nuggets in RaceCore, so repair it with
-         * nuggets too instead of charging whole Iron Ingots.
-         */
         if (path.startsWith("chainmail_")) {
             return repair.is(
                     Items.IRON_NUGGET
             );
         }
 
-        /*
-         * Netherite is an upgrade material rather than an eight-ingot
-         * armor recipe. Scrap gives us a saner repair denomination.
-         */
         if (path.startsWith("netherite_")) {
             return repair.is(
                     Items.NETHERITE_SCRAP
@@ -205,6 +204,36 @@ public final class RaceCoreRepairEvents {
     private static int originalMaterialCost(
             ItemStack stack
     ) {
+        if (stack.is(
+                RaceCoreWeapons.DAGGER.get()
+        )) {
+            return 1;
+        }
+
+        if (stack.is(
+                RaceCoreWeapons.GLAIVE.get()
+        )) {
+            return 2;
+        }
+
+        if (stack.is(
+                RaceCoreWeapons.LONGSWORD.get()
+        )) {
+            return 3;
+        }
+
+        if (stack.is(
+                RaceCoreWeapons.CLUB.get()
+        )) {
+            return 2;
+        }
+
+        if (stack.is(
+                RaceCoreWeapons.FLAIL.get()
+        )) {
+            return 2;
+        }
+
         Identifier id =
                 BuiltInRegistries.ITEM
                         .getKeyOrNull(
@@ -218,10 +247,6 @@ public final class RaceCoreRepairEvents {
         String path =
                 id.getPath();
 
-        /*
-         * Netherite repair accounting is based on the four Ancient-Debris
-         * scraps represented by the Netherite upgrade.
-         */
         if (path.startsWith("netherite_")) {
             return 4;
         }
@@ -244,13 +269,11 @@ public final class RaceCoreRepairEvents {
 
         if (path.endsWith("_pickaxe")
                 || path.endsWith("_axe")) {
-
             return 3;
         }
 
         if (path.endsWith("_sword")
                 || path.endsWith("_hoe")) {
-
             return 2;
         }
 
@@ -262,10 +285,6 @@ public final class RaceCoreRepairEvents {
             return 2;
         }
 
-        /*
-         * Other unusual durability items keep vanilla repair behavior until
-         * they receive an explicit RaceCore economy definition.
-         */
         return 0;
     }
 }

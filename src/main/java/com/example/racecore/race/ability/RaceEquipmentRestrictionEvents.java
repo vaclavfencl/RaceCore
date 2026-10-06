@@ -4,6 +4,7 @@ import com.example.racecore.RaceCore;
 import com.example.racecore.armor.ArmorDefinition;
 import com.example.racecore.armor.ArmorManager;
 import com.example.racecore.armor.ArmorWeight;
+import com.example.racecore.enchanting.UtilityEnchantingManager;
 import com.example.racecore.race.RaceDefinition;
 import com.example.racecore.race.RaceManager;
 import net.minecraft.network.chat.Component;
@@ -20,34 +21,129 @@ public final class RaceEquipmentRestrictionEvents {
     private RaceEquipmentRestrictionEvents() {}
 
     @SubscribeEvent
-    public static void onEquipmentChanged(LivingEquipmentChangeEvent event) {
-        if (!(event.getEntity() instanceof Player player)) return;
-        ItemStack equipped = event.getTo();
-        if (equipped.isEmpty()) return;
-        RaceDefinition race = RaceManager.getRace(player);
-        EquipmentSlot slot = event.getSlot();
-        String reason = getDisallowedReason(race, slot, equipped);
-        if (reason == null) return;
-        ItemStack rejected = equipped.copy();
-        player.setItemSlot(slot, ItemStack.EMPTY);
-        boolean fullyReturned = player.getInventory().add(rejected);
-        if (!fullyReturned && !rejected.isEmpty()) {
-            player.level().addFreshEntity(new ItemEntity(player.level(), player.getX(), player.getY(), player.getZ(), rejected));
+    public static void onEquipmentChanged(
+            LivingEquipmentChangeEvent event
+    ) {
+        if (!(event.getEntity() instanceof Player player)) {
+            return;
         }
-        player.sendOverlayMessage(Component.literal(reason));
+
+        ItemStack equipped = event.getTo();
+
+        if (equipped.isEmpty()) {
+            return;
+        }
+
+        RaceDefinition race =
+                RaceManager.getRace(player);
+
+        EquipmentSlot slot =
+                event.getSlot();
+
+        String reason =
+                getDisallowedReason(
+                        player,
+                        race,
+                        slot,
+                        equipped
+                );
+
+        if (reason == null) {
+            return;
+        }
+
+        ItemStack rejected =
+                equipped.copy();
+
+        player.setItemSlot(
+                slot,
+                ItemStack.EMPTY
+        );
+
+        boolean fullyReturned =
+                player.getInventory()
+                        .add(rejected);
+
+        if (!fullyReturned
+                && !rejected.isEmpty()) {
+
+            player.level()
+                    .addFreshEntity(
+                            new ItemEntity(
+                                    player.level(),
+                                    player.getX(),
+                                    player.getY(),
+                                    player.getZ(),
+                                    rejected
+                            )
+                    );
+        }
+
+        player.sendOverlayMessage(
+                Component.literal(reason)
+        );
     }
 
-    private static String getDisallowedReason(RaceDefinition race, EquipmentSlot slot, ItemStack stack) {
-        if (slot == EquipmentSlot.FEET && !race.canWearBoots()) return "Your race cannot wear boots.";
-        ArmorDefinition armor = ArmorManager.getDefinition(stack);
-        if (armor == null) return null;
-        ArmorWeight weight = armor.weight();
-        boolean allowed = switch (weight) {
-            case LIGHT -> race.canWearLightArmor();
-            case MEDIUM -> race.canWearMediumArmor();
-            case HEAVY, ULTRA_HEAVY -> race.canWearHeavyArmor();
-        };
-        if (allowed) return null;
-        return "Your race cannot wear " + weight.name().toLowerCase().replace('_', ' ') + " armor.";
+    private static String getDisallowedReason(
+            Player player,
+            RaceDefinition race,
+            EquipmentSlot slot,
+            ItemStack stack
+    ) {
+        if (slot == EquipmentSlot.FEET
+                && !race.canWearBoots()) {
+
+            return "Your race cannot wear boots.";
+        }
+
+        ArmorDefinition armor =
+                ArmorManager.getDefinition(stack);
+
+        if (armor == null) {
+            return null;
+        }
+
+        if (UtilityEnchantingManager
+                .isOverCapacity(
+                        player,
+                        stack
+                )) {
+
+            return "Utility enchant capacity exceeded ("
+                    + UtilityEnchantingManager
+                            .getUsedCapacity(stack)
+                    + "/"
+                    + UtilityEnchantingManager
+                            .getCapacity(
+                                    player,
+                                    stack
+                            )
+                    + ").";
+        }
+
+        ArmorWeight weight =
+                armor.weight();
+
+        boolean allowed =
+                switch (weight) {
+                    case LIGHT ->
+                            race.canWearLightArmor();
+
+                    case MEDIUM ->
+                            race.canWearMediumArmor();
+
+                    case HEAVY, ULTRA_HEAVY ->
+                            race.canWearHeavyArmor();
+                };
+
+        if (allowed) {
+            return null;
+        }
+
+        return "Your race cannot wear "
+                + weight.name()
+                .toLowerCase()
+                .replace('_', ' ')
+                + " armor.";
     }
 }

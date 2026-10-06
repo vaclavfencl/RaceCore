@@ -2,7 +2,11 @@
   "itemGroup.racecore": "Example Mod Tab",
   "block.racecore.example_block": "Example Block",
   "item.racecore.example_item": "Example Item",
-
+  "item.racecore.dagger": "Dagger",
+  "item.racecore.glaive": "Glaive",
+  "item.racecore.longsword": "Longsword",
+  "item.racecore.club": "Club",
+  "item.racecore.flail": "Flail",
   "racecore.configuration.title": "RaceCore Configs",
   "racecore.configuration.section.racecore.common.toml": "RaceCore Configs",
   "racecore.configuration.section.racecore.common.toml.title": "RaceCore Configs",
