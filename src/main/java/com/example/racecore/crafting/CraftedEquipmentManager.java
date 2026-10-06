@@ -420,51 +420,43 @@ public final class CraftedEquipmentManager {
     private static boolean isRaceCoreWeapon(
             ItemStack stack
     ) {
-        return isDagger(stack)
-                || isGlaive(stack)
-                || isLongsword(stack)
-                || isClub(stack)
-                || isFlail(stack);
+        return RaceCoreWeapons
+                .isCustomWeapon(stack);
     }
 
     private static boolean isDagger(
             ItemStack stack
     ) {
-        return stack.is(
-                RaceCoreWeapons.DAGGER.get()
-        );
+        return RaceCoreWeapons
+                .isDagger(stack);
     }
 
     private static boolean isGlaive(
             ItemStack stack
     ) {
-        return stack.is(
-                RaceCoreWeapons.GLAIVE.get()
-        );
+        return RaceCoreWeapons
+                .isGlaive(stack);
     }
 
     private static boolean isLongsword(
             ItemStack stack
     ) {
-        return stack.is(
-                RaceCoreWeapons.LONGSWORD.get()
-        );
+        return RaceCoreWeapons
+                .isLongsword(stack);
     }
 
     private static boolean isClub(
             ItemStack stack
     ) {
-        return stack.is(
-                RaceCoreWeapons.CLUB.get()
-        );
+        return RaceCoreWeapons
+                .isClub(stack);
     }
 
     private static boolean isFlail(
             ItemStack stack
     ) {
-        return stack.is(
-                RaceCoreWeapons.FLAIL.get()
-        );
+        return RaceCoreWeapons
+                .isFlail(stack);
     }
 
     private static boolean isCrossbow(

@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "minecraft:copper_sword",
+    "minecraft:stick"
+  ],
+  "result": {
+    "id": "racecore:copper_glaive"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "minecraft:stone_sword",
+    "minecraft:stick"
+  ],
+  "result": {
+    "id": "racecore:stone_glaive"
+  }
+}

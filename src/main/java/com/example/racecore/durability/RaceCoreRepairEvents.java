@@ -6,7 +6,6 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -146,31 +145,6 @@ public final class RaceCoreRepairEvents {
             ItemStack gear,
             ItemStack repair
     ) {
-        if (gear.is(
-                RaceCoreWeapons.CLUB.get()
-        )) {
-            return repair.is(
-                    ItemTags.PLANKS
-            );
-        }
-
-        if (gear.is(
-                RaceCoreWeapons.DAGGER.get()
-        )
-                || gear.is(
-                RaceCoreWeapons.GLAIVE.get()
-        )
-                || gear.is(
-                RaceCoreWeapons.LONGSWORD.get()
-        )
-                || gear.is(
-                RaceCoreWeapons.FLAIL.get()
-        )) {
-            return repair.is(
-                    Items.IRON_INGOT
-            );
-        }
-
         Identifier id =
                 BuiltInRegistries.ITEM
                         .getKeyOrNull(
@@ -204,36 +178,6 @@ public final class RaceCoreRepairEvents {
     private static int originalMaterialCost(
             ItemStack stack
     ) {
-        if (stack.is(
-                RaceCoreWeapons.DAGGER.get()
-        )) {
-            return 1;
-        }
-
-        if (stack.is(
-                RaceCoreWeapons.GLAIVE.get()
-        )) {
-            return 2;
-        }
-
-        if (stack.is(
-                RaceCoreWeapons.LONGSWORD.get()
-        )) {
-            return 3;
-        }
-
-        if (stack.is(
-                RaceCoreWeapons.CLUB.get()
-        )) {
-            return 2;
-        }
-
-        if (stack.is(
-                RaceCoreWeapons.FLAIL.get()
-        )) {
-            return 2;
-        }
-
         Identifier id =
                 BuiltInRegistries.ITEM
                         .getKeyOrNull(
@@ -249,6 +193,31 @@ public final class RaceCoreRepairEvents {
 
         if (path.startsWith("netherite_")) {
             return 4;
+        }
+
+        if (RaceCoreWeapons
+                .isDagger(stack)) {
+            return 1;
+        }
+
+        if (RaceCoreWeapons
+                .isGlaive(stack)) {
+            return 2;
+        }
+
+        if (RaceCoreWeapons
+                .isLongsword(stack)) {
+            return 3;
+        }
+
+        if (RaceCoreWeapons
+                .isClub(stack)) {
+            return 2;
+        }
+
+        if (RaceCoreWeapons
+                .isFlail(stack)) {
+            return 2;
         }
 
         if (path.endsWith("_helmet")) {

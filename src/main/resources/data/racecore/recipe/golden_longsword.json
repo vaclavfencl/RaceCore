@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "minecraft:golden_sword",
+    "minecraft:gold_ingot"
+  ],
+  "result": {
+    "id": "racecore:golden_longsword"
+  }
+}

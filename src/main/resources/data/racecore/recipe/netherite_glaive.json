@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "racecore:diamond_glaive",
+    "minecraft:netherite_ingot",
+    "minecraft:netherite_upgrade_smithing_template"
+  ],
+  "result": {
+    "id": "racecore:netherite_glaive"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "minecraft:copper_sword",
+    "minecraft:copper_ingot"
+  ],
+  "result": {
+    "id": "racecore:copper_longsword"
+  }
+}

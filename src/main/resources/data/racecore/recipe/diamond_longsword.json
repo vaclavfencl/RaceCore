@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "minecraft:diamond_sword",
+    "minecraft:diamond"
+  ],
+  "result": {
+    "id": "racecore:diamond_longsword"
+  }
+}
