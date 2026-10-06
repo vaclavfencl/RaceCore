@@ -40,7 +40,7 @@ public final class RaceEquipmentRestrictionEvents {
         EquipmentSlot slot =
                 event.getSlot();
 
-        String reason =
+        Component reason =
                 getDisallowedReason(
                         player,
                         race,
@@ -79,12 +79,10 @@ public final class RaceEquipmentRestrictionEvents {
                     );
         }
 
-        player.sendOverlayMessage(
-                Component.literal(reason)
-        );
+        player.sendOverlayMessage(reason);
     }
 
-    private static String getDisallowedReason(
+    private static Component getDisallowedReason(
             Player player,
             RaceDefinition race,
             EquipmentSlot slot,
@@ -93,7 +91,9 @@ public final class RaceEquipmentRestrictionEvents {
         if (slot == EquipmentSlot.FEET
                 && !race.canWearBoots()) {
 
-            return "Your race cannot wear boots.";
+            return Component.translatable(
+                    "message.racecore.equipment.no_boots"
+            );
         }
 
         ArmorDefinition armor =
@@ -109,16 +109,16 @@ public final class RaceEquipmentRestrictionEvents {
                         stack
                 )) {
 
-            return "Utility enchant capacity exceeded ("
-                    + UtilityEnchantingManager
-                            .getUsedCapacity(stack)
-                    + "/"
-                    + UtilityEnchantingManager
+            return Component.translatable(
+                    "message.racecore.equipment.utility_over_cap",
+                    UtilityEnchantingManager
+                            .getUsedCapacity(stack),
+                    UtilityEnchantingManager
                             .getCapacity(
                                     player,
                                     stack
                             )
-                    + ").";
+            );
         }
 
         ArmorWeight weight =
@@ -140,10 +140,20 @@ public final class RaceEquipmentRestrictionEvents {
             return null;
         }
 
-        return "Your race cannot wear "
-                + weight.name()
-                .toLowerCase()
-                .replace('_', ' ')
-                + " armor.";
+        return Component.translatable(
+                "message.racecore.equipment.weight_blocked",
+                Component.translatable(
+                        switch (weight) {
+                            case LIGHT ->
+                                    "tooltip.racecore.weight.light";
+                            case MEDIUM ->
+                                    "tooltip.racecore.weight.medium";
+                            case HEAVY ->
+                                    "tooltip.racecore.weight.heavy";
+                            case ULTRA_HEAVY ->
+                                    "tooltip.racecore.weight.ultra_heavy";
+                        }
+                )
+        );
     }
 }

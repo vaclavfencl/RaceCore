@@ -41,22 +41,24 @@ public final class RaceCommands {
         RaceDefinition race = RaceManager.getRace(player);
 
         context.getSource().sendSuccess(
-                () -> Component.literal(
-                        "Current race: " + race.displayName()
-                                + " (" + raceId + ")"
-                                + " | HP: " + formatNumber(race.maxHealth())
-                                + " | Scale: " + formatNumber(race.scale())
-                                + " | Step: " + formatNumber(race.stepHeight())
-                                + " | Jump: " + formatNumber(race.jumpHeight())
-                                + " | Speed: x" + formatNumber(race.movementSpeedMultiplier())
-                                + " | Reach: x" + formatNumber(race.reachMultiplier())
+                () -> Component.translatable(
+                        "command.racecore.race.current",
+                        RaceText.name(raceId),
+                        raceId,
+                        formatNumber(race.maxHealth()),
+                        formatNumber(race.scale()),
+                        formatNumber(race.stepHeight()),
+                        formatNumber(race.jumpHeight()),
+                        formatNumber(race.movementSpeedMultiplier()),
+                        formatNumber(race.reachMultiplier())
                 ),
                 false
         );
 
         context.getSource().sendSuccess(
-                () -> Component.literal(
-                        "Available races: " + String.join(", ", RaceRegistry.ids())
+                () -> Component.translatable(
+                        "command.racecore.race.available",
+                        String.join(", ", RaceRegistry.ids())
                 ),
                 false
         );
@@ -73,9 +75,10 @@ public final class RaceCommands {
 
         if (!RaceManager.setRace(player, requested)) {
             context.getSource().sendFailure(
-                    Component.literal(
-                            "Unknown race '" + requested + "'. Available: "
-                                    + String.join(", ", RaceRegistry.ids())
+                    Component.translatable(
+                            "command.racecore.race.unknown",
+                            requested,
+                            String.join(", ", RaceRegistry.ids())
                     )
             );
 
@@ -85,14 +88,15 @@ public final class RaceCommands {
         RaceDefinition race = RaceManager.getRace(player);
 
         context.getSource().sendSuccess(
-                () -> Component.literal(
-                        "Race changed to " + race.displayName()
-                                + " | HP: " + formatNumber(race.maxHealth())
-                                + " | Scale: " + formatNumber(race.scale())
-                                + " | Step: " + formatNumber(race.stepHeight())
-                                + " | Jump: " + formatNumber(race.jumpHeight())
-                                + " | Speed: x" + formatNumber(race.movementSpeedMultiplier())
-                                + " | Reach: x" + formatNumber(race.reachMultiplier())
+                () -> Component.translatable(
+                        "command.racecore.race.changed",
+                        RaceText.name(requested),
+                        formatNumber(race.maxHealth()),
+                        formatNumber(race.scale()),
+                        formatNumber(race.stepHeight()),
+                        formatNumber(race.jumpHeight()),
+                        formatNumber(race.movementSpeedMultiplier()),
+                        formatNumber(race.reachMultiplier())
                 ),
                 false
         );

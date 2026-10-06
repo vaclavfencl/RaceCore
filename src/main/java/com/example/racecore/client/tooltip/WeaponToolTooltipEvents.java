@@ -10,9 +10,6 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 
-/**
- * Displays weapon/tool enchant capacities in the same style as armor.
- */
 @EventBusSubscriber(
         modid = RaceCore.MODID,
         value = Dist.CLIENT
@@ -30,7 +27,6 @@ public final class WeaponToolTooltipEvents {
 
         if (!WeaponToolEnchantingManager
                 .isWeaponOrTool(stack)) {
-
             return;
         }
 
@@ -53,13 +49,8 @@ public final class WeaponToolTooltipEvents {
         );
 
         event.getToolTip().add(
-                Component.literal(
-                                "Effective Cap: "
-                        )
-                        .withStyle(
-                                ChatFormatting.GRAY
-                        )
-                        .append(
+                Component.translatable(
+                                "tooltip.racecore.weapon.effective_cap",
                                 Component.literal(
                                                 Integer.toString(
                                                         effectiveCapacity
@@ -69,16 +60,14 @@ public final class WeaponToolTooltipEvents {
                                                 ChatFormatting.AQUA
                                         )
                         )
-        );
-
-        event.getToolTip().add(
-                Component.literal(
-                                "Utility Cap: "
-                        )
                         .withStyle(
                                 ChatFormatting.GRAY
                         )
-                        .append(
+        );
+
+        event.getToolTip().add(
+                Component.translatable(
+                                "tooltip.racecore.weapon.utility_cap",
                                 Component.literal(
                                                 Integer.toString(
                                                         utilityCapacity
@@ -87,6 +76,9 @@ public final class WeaponToolTooltipEvents {
                                         .withStyle(
                                                 ChatFormatting.AQUA
                                         )
+                        )
+                        .withStyle(
+                                ChatFormatting.GRAY
                         )
         );
     }

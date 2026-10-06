@@ -2,8 +2,7 @@ package com.example.racecore.client.tooltip;
 
 import com.example.racecore.RaceCore;
 import com.example.racecore.crafting.CraftedEquipmentManager;
-import com.example.racecore.race.RaceDefinition;
-import com.example.racecore.race.RaceRegistry;
+import com.example.racecore.race.RaceText;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.neoforged.api.distmarker.Dist;
@@ -42,24 +41,17 @@ public final class CraftedEquipmentTooltipEvents {
             return;
         }
 
-        RaceDefinition race =
-                RaceRegistry.getOrHuman(
-                        raceId
-                );
-
         Component original =
                 tooltip.getFirst();
 
         MutableComponent prefixed =
-                Component.literal(
-                                race.displayName()
-                                        + " "
+                Component.translatable(
+                                "item.racecore.crafted_name",
+                                RaceText.name(raceId),
+                                original.copy()
                         )
                         .withStyle(
                                 original.getStyle()
-                        )
-                        .append(
-                                original.copy()
                         );
 
         tooltip.set(

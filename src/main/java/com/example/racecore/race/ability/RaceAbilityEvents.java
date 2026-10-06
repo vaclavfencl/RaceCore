@@ -8,7 +8,6 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
@@ -44,12 +43,6 @@ import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 import java.util.List;
 
-/**
- * Generic Phase 5 race abilities.
- *
- * Important: this class does NOT check hard-coded race ids such as "dwarf" or
- * "human". It only reads the fully-resolved values from RaceDefinition.
- */
 @EventBusSubscriber(modid = RaceCore.MODID)
 public final class RaceAbilityEvents {
     private static final String XP_CARRY_KEY =
@@ -88,12 +81,6 @@ public final class RaceAbilityEvents {
     private RaceAbilityEvents() {
     }
 
-    /**
-     * Human currently uses xpBonus = 0.10.
-     *
-     * Fractional XP is carried between events so repeated 1-XP gains still
-     * average to exactly +10%, instead of being rounded away forever.
-     */
     @SubscribeEvent
     public static void onXpChange(
             PlayerXpEvent.XpChange event
@@ -147,9 +134,6 @@ public final class RaceAbilityEvents {
         }
     }
 
-    /**
-     * Dwarf currently uses miningSpeedMultiplier = 1.10.
-     */
     @SubscribeEvent
     public static void onBreakSpeed(
             PlayerEvent.BreakSpeed event
@@ -176,11 +160,6 @@ public final class RaceAbilityEvents {
         );
     }
 
-    /**
-     * Dwarf currently uses knockbackResistanceBonus = 0.10.
-     *
-     * This is a direct racial reduction to final knockback strength.
-     */
     @SubscribeEvent
     public static void onKnockback(
             LivingKnockBackEvent event
@@ -209,17 +188,6 @@ public final class RaceAbilityEvents {
         );
     }
 
-    /**
-     * Generic combat multipliers.
-     *
-     * Phase 5A currently uses:
-     * - Goblin outgoingDamageMultiplier = 0.85
-     * - Dragonborn dragonDamageMultiplier = 2.0
-     * - Dragonborn poisonDamageMultiplier = 0.0
-     *
-     * incomingDamageMultiplier is also wired now for later races such as
-     * Tiefling, but defaults to 1.0 until configured.
-     */
     @SubscribeEvent
     public static void onLivingDamage(
             LivingDamageEvent.Pre event
@@ -230,7 +198,6 @@ public final class RaceAbilityEvents {
             return;
         }
 
-        // Generic outgoing race modifiers.
         if (event.getSource().getEntity()
                 instanceof Player attacker) {
 
@@ -241,7 +208,6 @@ public final class RaceAbilityEvents {
                     attackerRace
                             .outgoingDamageMultiplier();
 
-            // Nether-specific offensive bonus.
             if (attacker.level().dimension()
                     == Level.NETHER) {
 
@@ -250,7 +216,6 @@ public final class RaceAbilityEvents {
                                 .netherDamageMultiplier();
             }
 
-            // Light-dependent offensive modifier.
             int light =
                     attacker.level()
                             .getMaxLocalRawBrightness(
@@ -282,7 +247,6 @@ public final class RaceAbilityEvents {
             RaceDefinition victimRace =
                     RaceManager.getRace(victim);
 
-            // Pickaxe hit can apply a generic Cracked-style vulnerability.
             if (event.getSource().getEntity()
                     instanceof LivingEntity attacker
                     && attacker.getMainHandItem()
@@ -295,8 +259,8 @@ public final class RaceAbilityEvents {
                 );
 
                 victim.sendOverlayMessage(
-                        Component.literal(
-                                "Cracked! Incoming damage increased."
+                        Component.translatable(
+                                "message.racecore.ability.cracked"
                         )
                 );
             }
@@ -364,13 +328,6 @@ public final class RaceAbilityEvents {
         );
     }
 
-    /**
-     * Generic player-tick abilities.
-     *
-     * Racial Night Vision is now a true infinite effect. This tick handler only
-     * checks whether it is missing (for example after drinking milk) and
-     * reapplies it when necessary.
-     */
     @SubscribeEvent
     public static void onPlayerTick(
             PlayerTickEvent.Post event
@@ -398,7 +355,6 @@ public final class RaceAbilityEvents {
             );
         }
 
-        // Environment movement is refreshed twice per second.
         if (player.tickCount % 10 == 0) {
             updateEnvironmentMovement(
                     player,
@@ -406,7 +362,6 @@ public final class RaceAbilityEvents {
             );
         }
 
-        // Exact RaceCore HP per second; bypass global heal x5 scaling.
         if (player.tickCount % 20 == 0
                 && race.passiveRegenerationPerSecond() > 0.0
                 && player.getHealth() < player.getMaxHealth()) {
@@ -420,10 +375,6 @@ public final class RaceAbilityEvents {
             );
         }
 
-        /*
-         * Normally this is a no-op because the racial effect is infinite.
-         * If milk / effect clearing removes it, it is restored immediately.
-         */
         if (race.permanentNightVision()
                 && !player.hasEffect(
                         MobEffects.NIGHT_VISION
@@ -502,13 +453,6 @@ public final class RaceAbilityEvents {
         );
     }
 
-    /**
-     * Nobody can load firework rockets into a crossbow unless their race sets
-     * canLoadFireworkRockets=true.
-     *
-     * This checks the ammo selected by vanilla before CrossbowItem begins the
-     * charging action.
-     */
     @SubscribeEvent
     public static void onRightClickItem(
             PlayerInteractEvent.RightClickItem event
@@ -528,8 +472,8 @@ public final class RaceAbilityEvents {
 
             if (!player.level().isClientSide()) {
                 player.sendOverlayMessage(
-                        Component.literal(
-                                "Your race cannot use rockets to boost flight."
+                        Component.translatable(
+                                "message.racecore.ability.no_rocket_boost"
                         )
                 );
             }
@@ -555,8 +499,8 @@ public final class RaceAbilityEvents {
 
                 if (!player.level().isClientSide()) {
                     player.sendOverlayMessage(
-                            Component.literal(
-                                    "It is too bright to use ranged weapons."
+                            Component.translatable(
+                                    "message.racecore.ability.too_bright_ranged"
                             )
                     );
                 }
@@ -564,7 +508,6 @@ public final class RaceAbilityEvents {
             }
         }
 
-        // Firework-loaded crossbows: only races explicitly allowed in races.json.
         if (stack.getItem() instanceof CrossbowItem
                 && !race.canLoadFireworkRockets()) {
 
@@ -576,8 +519,8 @@ public final class RaceAbilityEvents {
 
                 if (!player.level().isClientSide()) {
                     player.sendOverlayMessage(
-                            Component.literal(
-                                    "Your race cannot load firework rockets into crossbows."
+                            Component.translatable(
+                                    "message.racecore.ability.no_firework_crossbow"
                             )
                     );
                 }
@@ -585,8 +528,6 @@ public final class RaceAbilityEvents {
             }
         }
 
-        // Hobbit-style eating at full hunger.
-        // FOOD prevents potions/other consumables from being treated as food.
         if (race.canEatWhenFull()
                 && stack.has(DataComponents.FOOD)
                 && stack.has(DataComponents.CONSUMABLE)
@@ -616,7 +557,6 @@ public final class RaceAbilityEvents {
 
         RaceDefinition race = RaceManager.getRace(player);
 
-        // Multiplies visible nutrition/hunger. Saturation remains vanilla.
         double multiplier = race.foodHungerMultiplier();
         if (multiplier > 1.0) {
             int extraNutrition = (int) Math.round(
@@ -634,7 +574,6 @@ public final class RaceAbilityEvents {
             }
         }
 
-        // Exact RaceCore HP: bypasses the global heal x5 event.
         double healing = race.foodHealing();
         if (healing > 0.0
                 && player.getHealth() < player.getMaxHealth()) {
@@ -648,16 +587,6 @@ public final class RaceAbilityEvents {
         }
     }
 
-    /**
-     * Generic Fortune bonus.
-     *
-     * Rather than permanently modifying the player's pickaxe, RaceCore creates
-     * a temporary copy of the actual tool, raises Fortune on that copy, and
-     * rerolls this block's loot table with the effective Fortune level.
-     *
-     * Current Phase 5A use:
-     * Dwarf fortuneBonus = 1
-     */
     @SubscribeEvent
     public static void onBlockDrops(
             BlockDropsEvent event

@@ -26,6 +26,29 @@ import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 
 public final class CraftedEquipmentManager {
+    public static final double HUMAN_LONGSWORD_DAMAGE_BONUS = 0.10;
+    public static final double HUMAN_LONGSWORD_DURABILITY_BONUS = 0.20;
+
+    public static final double DWARF_TOOL_DURABILITY_BONUS = 0.25;
+    public static final double DWARF_MEDIUM_HEAVY_ARMOR_BONUS = 5.0;
+    public static final double DWARF_MACE_ATTACK_SPEED_BONUS = 0.10;
+
+    public static final double ELF_WEAPON_DURABILITY_BONUS = 0.40;
+
+    public static final double GIANT_CLUB_FLAIL_DAMAGE_BONUS = 0.20;
+    public static final double GIANT_CLUB_FLAIL_DURABILITY_PENALTY = 0.15;
+
+    public static final double TROLL_AXE_ATTACK_SPEED_BONUS = 0.15;
+
+    public static final double GOBLIN_DAGGER_DURABILITY_BONUS = 0.20;
+    public static final double GOBLIN_DAGGER_ATTACK_SPEED_BONUS = 0.15;
+
+    public static final double DRAGONBORN_ARMOR_DURABILITY_BONUS = 0.20;
+
+    public static final double TIEFLING_GLAIVE_DAMAGE_BONUS = 0.10;
+    public static final double TIEFLING_GLAIVE_ATTACK_SPEED_BONUS = 0.10;
+    public static final double TIEFLING_CROSSBOW_DURABILITY_BONUS = 0.25;
+
     private static final String CRAFTED_RACE_KEY =
             "racecore_crafted_race";
 
@@ -88,14 +111,14 @@ public final class CraftedEquipmentManager {
         switch (raceId) {
             case "human" -> {
                 if (isLongsword(stack)) {
-                    durabilityMultiplier = 1.20;
-                    damageBonus = 0.10;
+                    durabilityMultiplier = 1.0 + HUMAN_LONGSWORD_DURABILITY_BONUS;
+                    damageBonus = HUMAN_LONGSWORD_DAMAGE_BONUS;
                 }
             }
 
             case "dwarf" -> {
                 if (isTool(stack)) {
-                    durabilityMultiplier = 1.25;
+                    durabilityMultiplier = 1.0 + DWARF_TOOL_DURABILITY_BONUS;
                 }
 
                 ArmorDefinition armor =
@@ -112,11 +135,11 @@ public final class CraftedEquipmentManager {
                                 || armor.weight()
                                 == ArmorWeight.ULTRA_HEAVY
                 )) {
-                    armorBonus = 5.0;
+                    armorBonus = DWARF_MEDIUM_HEAVY_ARMOR_BONUS;
                 }
 
                 if (stack.is(Items.MACE)) {
-                    attackSpeedBonus = 0.10;
+                    attackSpeedBonus = DWARF_MACE_ATTACK_SPEED_BONUS;
                 }
             }
 
@@ -125,15 +148,15 @@ public final class CraftedEquipmentManager {
                         && !isClub(stack)
                         && !isFlail(stack)
                         && !isCrossbow(stack)) {
-                    durabilityMultiplier = 1.40;
+                    durabilityMultiplier = 1.0 + ELF_WEAPON_DURABILITY_BONUS;
                 }
             }
 
             case "giant" -> {
                 if (isClub(stack)
                         || isFlail(stack)) {
-                    durabilityMultiplier = 0.85;
-                    damageBonus = 0.20;
+                    durabilityMultiplier = 1.0 - GIANT_CLUB_FLAIL_DURABILITY_PENALTY;
+                    damageBonus = GIANT_CLUB_FLAIL_DAMAGE_BONUS;
                 }
             }
 
@@ -141,7 +164,7 @@ public final class CraftedEquipmentManager {
                 if (stack.is(
                         ItemTags.AXES
                 )) {
-                    attackSpeedBonus = 0.15;
+                    attackSpeedBonus = TROLL_AXE_ATTACK_SPEED_BONUS;
                 }
             }
 
@@ -153,8 +176,8 @@ public final class CraftedEquipmentManager {
 
             case "goblin" -> {
                 if (isDagger(stack)) {
-                    durabilityMultiplier = 1.20;
-                    attackSpeedBonus = 0.15;
+                    durabilityMultiplier = 1.0 + GOBLIN_DAGGER_DURABILITY_BONUS;
+                    attackSpeedBonus = GOBLIN_DAGGER_ATTACK_SPEED_BONUS;
                 }
             }
 
@@ -162,18 +185,18 @@ public final class CraftedEquipmentManager {
                 if (ArmorManager.getDefinition(
                         stack
                 ) != null) {
-                    durabilityMultiplier = 1.20;
+                    durabilityMultiplier = 1.0 + DRAGONBORN_ARMOR_DURABILITY_BONUS;
                 }
             }
 
             case "tiefling" -> {
                 if (isGlaive(stack)) {
-                    damageBonus = 0.10;
-                    attackSpeedBonus = 0.10;
+                    damageBonus = TIEFLING_GLAIVE_DAMAGE_BONUS;
+                    attackSpeedBonus = TIEFLING_GLAIVE_ATTACK_SPEED_BONUS;
                 }
 
                 if (isCrossbow(stack)) {
-                    durabilityMultiplier = 1.25;
+                    durabilityMultiplier = 1.0 + TIEFLING_CROSSBOW_DURABILITY_BONUS;
                 }
             }
 

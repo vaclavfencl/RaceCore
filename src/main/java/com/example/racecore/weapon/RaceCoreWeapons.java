@@ -5,13 +5,11 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ToolMaterial;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -80,7 +78,6 @@ public final class RaceCoreWeapons {
 
     public static void register(IEventBus modBus) {
         ITEMS.register(modBus);
-        modBus.addListener(RaceCoreWeapons::addCreativeItems);
     }
 
     private static DeferredItem<Item> registerWeapon(
@@ -229,40 +226,4 @@ public final class RaceCoreWeapons {
         return false;
     }
 
-    private static void addCreativeItems(
-            BuildCreativeModeTabContentsEvent event
-    ) {
-        if (event.getTabKey()
-                != CreativeModeTabs.COMBAT) {
-            return;
-        }
-
-        event.accept(CLUB);
-
-        event.accept(STONE_DAGGER);
-        event.accept(STONE_GLAIVE);
-        event.accept(STONE_LONGSWORD);
-
-        event.accept(COPPER_DAGGER);
-        event.accept(COPPER_GLAIVE);
-        event.accept(COPPER_LONGSWORD);
-
-        event.accept(DAGGER);
-        event.accept(GLAIVE);
-        event.accept(LONGSWORD);
-
-        event.accept(GOLDEN_DAGGER);
-        event.accept(GOLDEN_GLAIVE);
-        event.accept(GOLDEN_LONGSWORD);
-
-        event.accept(DIAMOND_DAGGER);
-        event.accept(DIAMOND_GLAIVE);
-        event.accept(DIAMOND_LONGSWORD);
-
-        event.accept(NETHERITE_DAGGER);
-        event.accept(NETHERITE_GLAIVE);
-        event.accept(NETHERITE_LONGSWORD);
-
-        event.accept(FLAIL);
-    }
 }

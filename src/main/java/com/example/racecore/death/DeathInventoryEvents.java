@@ -46,7 +46,6 @@ public final class DeathInventoryEvents {
         BlockPos deathPos = player.blockPosition().immutable();
         BlockPos barrelPos = null;
 
-        // Empty slots 9-35 => no Death Barrel at all.
         if (hasBarrelContents) {
             barrelPos = placeDeathBarrel(player, barrelContents, settings);
         }
@@ -58,7 +57,6 @@ public final class DeathInventoryEvents {
             ItemStack originalStack = original.get(slot);
             boolean keptSlot = isKeptSlot(slot);
 
-            // If barrel placement failed, restore everything as the safe fallback.
             if (keptSlot || !barrelHandled) {
                 restore.add(originalStack.copy());
             } else {
@@ -76,7 +74,6 @@ public final class DeathInventoryEvents {
                 LastDeathLocation.create(level, deathPos, barrelPos)
         );
 
-        // Prevent vanilla death dropping from duplicating anything.
         clearInventory(inventory);
 
         if (hasBarrelContents && barrelPos == null) {
@@ -117,27 +114,30 @@ public final class DeathInventoryEvents {
         if (!location.exists()) return;
 
         player.sendSystemMessage(
-                Component.literal(
-                        "Last death: " + location.prettyDimension()
-                                + " | X: " + location.deathX()
-                                + " Y: " + location.deathY()
-                                + " Z: " + location.deathZ()
+                Component.translatable(
+                        "message.racecore.death.last",
+                        location.prettyDimension(),
+                        location.deathX(),
+                        location.deathY(),
+                        location.deathZ()
                 )
         );
 
         if (location.hasBarrel()) {
             player.sendSystemMessage(
-                    Component.literal(
-                            "Death Barrel: " + location.prettyDimension()
-                                    + " | X: " + location.barrelX()
-                                    + " Y: " + location.barrelY()
-                                    + " Z: " + location.barrelZ()
-                                    + " | Use /death to show this again."
+                    Component.translatable(
+                            "message.racecore.death.barrel",
+                            location.prettyDimension(),
+                            location.barrelX(),
+                            location.barrelY(),
+                            location.barrelZ()
                     )
             );
         } else {
             player.sendSystemMessage(
-                    Component.literal("Use /death to show this location again.")
+                    Component.translatable(
+                            "message.racecore.death.use_command"
+                    )
             );
         }
     }
@@ -211,7 +211,6 @@ public final class DeathInventoryEvents {
             }
         }
 
-        // Stored now for the later private-loot / grace-period system.
         barrel.setData(
                 DeathAttachments.DEATH_BARREL_OWNER,
                 player.getUUID()
@@ -286,7 +285,6 @@ public final class DeathInventoryEvents {
     ) {
         if (!level.isInWorldBounds(pos) || !level.hasChunkAt(pos)) return false;
 
-        // Never overwrite water/lava/plants/snow/blocks/containers.
         if (!level.isEmptyBlock(pos)) return false;
 
         if (settings.requireAirAbove()) {

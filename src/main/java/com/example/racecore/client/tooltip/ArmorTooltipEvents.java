@@ -73,13 +73,8 @@ public final class ArmorTooltipEvents {
         tooltip.add(Component.empty());
 
         tooltip.add(
-                Component.literal(
-                                "RaceCore Armor: "
-                        )
-                        .withStyle(
-                                ChatFormatting.GRAY
-                        )
-                        .append(
+                Component.translatable(
+                                "tooltip.racecore.armor.value",
                                 Component.literal(
                                                 NUMBER_FORMAT.format(
                                                         ArmorManager
@@ -95,24 +90,25 @@ public final class ArmorTooltipEvents {
                                                         : ChatFormatting.BLUE
                                         )
                         )
-        );
-
-        tooltip.add(
-                Component.literal("Weight: ")
                         .withStyle(
                                 ChatFormatting.GRAY
                         )
-                        .append(
-                                Component.literal(
-                                                formatWeight(
-                                                        definition.weight()
-                                                )
-                                        )
+        );
+
+        tooltip.add(
+                Component.translatable(
+                                "tooltip.racecore.armor.weight",
+                                weightName(
+                                        definition.weight()
+                                ).copy()
                                         .withStyle(
                                                 weightColor(
                                                         definition.weight()
                                                 )
                                         )
+                        )
+                        .withStyle(
+                                ChatFormatting.GRAY
                         )
         );
 
@@ -127,13 +123,8 @@ public final class ArmorTooltipEvents {
                         + "%";
 
         tooltip.add(
-                Component.literal(
-                                "Movement Speed: "
-                        )
-                        .withStyle(
-                                ChatFormatting.GRAY
-                        )
-                        .append(
+                Component.translatable(
+                                "tooltip.racecore.armor.movement",
                                 Component.literal(
                                                 movementText
                                         )
@@ -142,6 +133,9 @@ public final class ArmorTooltipEvents {
                                                         ? ChatFormatting.GREEN
                                                         : ChatFormatting.RED
                                         )
+                        )
+                        .withStyle(
+                                ChatFormatting.GRAY
                         )
         );
 
@@ -153,13 +147,8 @@ public final class ArmorTooltipEvents {
                         );
 
         tooltip.add(
-                Component.literal(
-                                "Protection Cap: "
-                        )
-                        .withStyle(
-                                ChatFormatting.GRAY
-                        )
-                        .append(
+                Component.translatable(
+                                "tooltip.racecore.armor.protection_cap",
                                 Component.literal(
                                                 Integer.toString(
                                                         protectionCapacity
@@ -168,6 +157,9 @@ public final class ArmorTooltipEvents {
                                         .withStyle(
                                                 ChatFormatting.AQUA
                                         )
+                        )
+                        .withStyle(
+                                ChatFormatting.GRAY
                         )
         );
 
@@ -179,13 +171,8 @@ public final class ArmorTooltipEvents {
                         );
 
         tooltip.add(
-                Component.literal(
-                                "Utility Cap: "
-                        )
-                        .withStyle(
-                                ChatFormatting.GRAY
-                        )
-                        .append(
+                Component.translatable(
+                                "tooltip.racecore.armor.utility_cap",
                                 Component.literal(
                                                 Integer.toString(
                                                         utilityCapacity
@@ -194,6 +181,9 @@ public final class ArmorTooltipEvents {
                                         .withStyle(
                                                 ChatFormatting.AQUA
                                         )
+                        )
+                        .withStyle(
+                                ChatFormatting.GRAY
                         )
         );
     }
@@ -284,15 +274,21 @@ public final class ArmorTooltipEvents {
         };
     }
 
-    private static String formatWeight(
+    private static Component weightName(
             ArmorWeight weight
     ) {
-        return switch (weight) {
-            case LIGHT -> "Light";
-            case MEDIUM -> "Medium";
-            case HEAVY -> "Heavy";
-            case ULTRA_HEAVY -> "Ultra Heavy";
-        };
+        return Component.translatable(
+                switch (weight) {
+                    case LIGHT ->
+                            "tooltip.racecore.weight.light";
+                    case MEDIUM ->
+                            "tooltip.racecore.weight.medium";
+                    case HEAVY ->
+                            "tooltip.racecore.weight.heavy";
+                    case ULTRA_HEAVY ->
+                            "tooltip.racecore.weight.ultra_heavy";
+                }
+        );
     }
 
     private static ChatFormatting weightColor(

@@ -25,27 +25,33 @@ public final class DeathCommands {
         LastDeathLocation location = player.getData(DeathAttachments.LAST_DEATH);
 
         if (!location.exists()) {
-            context.getSource().sendFailure(Component.literal("No recorded death location."));
+            context.getSource().sendFailure(
+                    Component.translatable(
+                            "command.racecore.death.none"
+                    )
+            );
             return 0;
         }
 
         context.getSource().sendSuccess(
-                () -> Component.literal(
-                        "Last death: " + location.prettyDimension()
-                                + " | X: " + location.deathX()
-                                + " Y: " + location.deathY()
-                                + " Z: " + location.deathZ()
+                () -> Component.translatable(
+                        "command.racecore.death.last",
+                        location.prettyDimension(),
+                        location.deathX(),
+                        location.deathY(),
+                        location.deathZ()
                 ),
                 false
         );
 
         if (location.hasBarrel()) {
             context.getSource().sendSuccess(
-                    () -> Component.literal(
-                            "Death Barrel: " + location.prettyDimension()
-                                    + " | X: " + location.barrelX()
-                                    + " Y: " + location.barrelY()
-                                    + " Z: " + location.barrelZ()
+                    () -> Component.translatable(
+                            "command.racecore.death.barrel",
+                            location.prettyDimension(),
+                            location.barrelX(),
+                            location.barrelY(),
+                            location.barrelZ()
                     ),
                     false
             );

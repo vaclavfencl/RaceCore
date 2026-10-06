@@ -14,9 +14,6 @@ import net.neoforged.neoforge.event.entity.player.PlayerEnchantItemEvent;
 
 import java.util.List;
 
-/**
- * Enforces Utility capacity using the same race/base cap as Protection.
- */
 @EventBusSubscriber(modid = RaceCore.MODID)
 public final class UtilityEnchantingEvents {
     private UtilityEnchantingEvents() {
@@ -31,7 +28,6 @@ public final class UtilityEnchantingEvents {
 
         if (output.isEmpty()
                 || ArmorManager.getDefinition(output) == null) {
-
             return;
         }
 
@@ -40,7 +36,6 @@ public final class UtilityEnchantingEvents {
                         event.getPlayer(),
                         output
                 )) {
-
             event.setCanceled(true);
         }
     }
@@ -86,7 +81,6 @@ public final class UtilityEnchantingEvents {
                     .isUtilityEnchantment(
                             instance.enchantment()
                     )) {
-
                 continue;
             }
 
@@ -136,10 +130,9 @@ public final class UtilityEnchantingEvents {
 
         event.getEntity()
                 .sendOverlayMessage(
-                        Component.literal(
-                                "Utility enchant capacity: "
-                                        + capacity
-                                        + ". Extra utility levels were removed."
+                        Component.translatable(
+                                "message.racecore.enchant.utility_trimmed",
+                                capacity
                         )
                 );
     }

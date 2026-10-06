@@ -18,17 +18,11 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 import java.util.List;
 
-/**
- * Enforces RaceCore Effective/Utility enchant caps for weapons and tools.
- */
 @EventBusSubscriber(modid = RaceCore.MODID)
 public final class WeaponToolEnchantingEvents {
     private WeaponToolEnchantingEvents() {
     }
 
-    /**
-     * Reject an anvil result if either enchant pool exceeds the user's cap.
-     */
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onAnvilUpdate(
             AnvilUpdateEvent event
@@ -38,7 +32,6 @@ public final class WeaponToolEnchantingEvents {
 
         if (!WeaponToolEnchantingManager
                 .isWeaponOrTool(output)) {
-
             return;
         }
 
@@ -47,16 +40,10 @@ public final class WeaponToolEnchantingEvents {
                         event.getPlayer(),
                         output
                 )) {
-
             event.setCanceled(true);
         }
     }
 
-    /**
-     * Enchanting-table rolls happen before this event.
-     * If a roll exceeds a pool, remove later bonus levels from that same
-     * table roll until both pools fit.
-     */
     @SubscribeEvent
     public static void onPlayerEnchantItem(
             PlayerEnchantItemEvent event
@@ -66,7 +53,6 @@ public final class WeaponToolEnchantingEvents {
 
         if (!WeaponToolEnchantingManager
                 .isWeaponOrTool(stack)) {
-
             return;
         }
 
@@ -189,9 +175,6 @@ public final class WeaponToolEnchantingEvents {
         }
     }
 
-    /**
-     * Command-created / otherwise-invalid over-cap equipment is not usable.
-     */
     @SubscribeEvent
     public static void onBreakSpeed(
             PlayerEvent.BreakSpeed event
@@ -305,25 +288,22 @@ public final class WeaponToolEnchantingEvents {
                 player.getMainHandItem();
 
         player.sendOverlayMessage(
-                Component.literal(
-                        "Enchant capacity exceeded: Effective "
-                                + WeaponToolEnchantingManager
+                Component.translatable(
+                        "message.racecore.enchant.weapon_over_cap",
+                        WeaponToolEnchantingManager
                                 .getUsedEffectiveCapacity(
                                         stack
-                                )
-                                + "/"
-                                + WeaponToolEnchantingManager
+                                ),
+                        WeaponToolEnchantingManager
                                 .getEffectiveCapacity(
                                         player,
                                         stack
-                                )
-                                + ", Utility "
-                                + WeaponToolEnchantingManager
+                                ),
+                        WeaponToolEnchantingManager
                                 .getUsedUtilityCapacity(
                                         stack
-                                )
-                                + "/"
-                                + WeaponToolEnchantingManager
+                                ),
+                        WeaponToolEnchantingManager
                                 .getUtilityCapacity(
                                         player,
                                         stack

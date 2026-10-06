@@ -1,5 +1,6 @@
 package com.example.racecore;
 
+import com.example.racecore.creative.RaceCoreCreativeTabs;
 import com.example.racecore.death.DeathAttachments;
 import com.example.racecore.death.DeathContent;
 import com.example.racecore.loot.LootLuckContent;
@@ -23,6 +24,7 @@ public final class RaceCore {
         DeathContent.register(modBus);
         LootLuckContent.register(modBus);
         RaceCoreWeapons.register(modBus);
+        RaceCoreCreativeTabs.register(modBus);
         RaceRegistry.load();
 
         LOGGER.info("RaceCore loaded {} race definitions.", RaceRegistry.ids().size());

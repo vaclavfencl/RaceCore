@@ -19,18 +19,11 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
-/**
- * Keeps RaceCore equipment from being permanently deleted by durability.
- */
 @EventBusSubscriber(modid = RaceCore.MODID)
 public final class BrokenItemEvents {
     private BrokenItemEvents() {
     }
 
-    /**
-     * The normal path: reserve the final durability point as RaceCore's
-     * broken-state sentinel before vanilla gets a chance to delete it.
-     */
     @SubscribeEvent
     public static void onPlayerTick(
             PlayerTickEvent.Post event
@@ -93,10 +86,6 @@ public final class BrokenItemEvents {
         }
     }
 
-    /**
-     * Fallback for hand-held items that take enough durability damage to
-     * skip directly past the one-point sentinel in a single operation.
-     */
     @SubscribeEvent
     public static void onDestroyedItem(
             PlayerDestroyItemEvent event
@@ -108,7 +97,6 @@ public final class BrokenItemEvents {
                 .isSupported(original)
                 || BrokenItemManager
                 .isBroken(original)) {
-
             return;
         }
 
@@ -138,18 +126,12 @@ public final class BrokenItemEvents {
         );
     }
 
-    /**
-     * Armor does not use PlayerDestroyItemEvent when it breaks, so keep a
-     * server-side equipment-change fallback for the rare case where a hit
-     * destroys the final durability points before the next player tick.
-     */
     @SubscribeEvent
     public static void onEquipmentChanged(
             LivingEquipmentChangeEvent event
     ) {
         if (!(event.getEntity()
                 instanceof Player player)) {
-
             return;
         }
 
@@ -167,7 +149,6 @@ public final class BrokenItemEvents {
                 || previous.getMaxDamage() <= 0
                 || previous.getDamageValue()
                 < previous.getMaxDamage() - 1) {
-
             return;
         }
 
@@ -296,16 +277,13 @@ public final class BrokenItemEvents {
     ) {
         if (!player.level().isClientSide()) {
             player.sendOverlayMessage(
-                    Component.literal(
-                            "This item is broken. Repair it at an anvil."
+                    Component.translatable(
+                            "message.racecore.item.broken"
                     )
             );
         }
     }
 
-    /**
-     * Generic tooltip for broken armor, tools and weapons.
-     */
     @EventBusSubscriber(
             modid = RaceCore.MODID,
             value = Dist.CLIENT
@@ -325,8 +303,8 @@ public final class BrokenItemEvents {
             }
 
             event.getToolTip().add(
-                    Component.literal(
-                                    "BROKEN - repair at an anvil"
+                    Component.translatable(
+                                    "tooltip.racecore.item.broken"
                             )
                             .withStyle(
                                     ChatFormatting.RED
