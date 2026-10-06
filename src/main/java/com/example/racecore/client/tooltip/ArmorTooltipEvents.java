@@ -5,6 +5,7 @@ import com.example.racecore.armor.ArmorDefinition;
 import com.example.racecore.armor.ArmorManager;
 import com.example.racecore.armor.ArmorWeight;
 import com.example.racecore.armor.ProtectionManager;
+import com.example.racecore.durability.BrokenItemManager;
 import com.example.racecore.movement.MovementRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponents;
@@ -37,7 +38,7 @@ public final class ArmorTooltipEvents {
         removeVanillaArmorLines(tooltip);
         double movementPenalty = getPieceMovementPenalty(stack, definition.weight());
         tooltip.add(Component.empty());
-        tooltip.add(Component.literal("RaceCore Armor: ").withStyle(ChatFormatting.GRAY).append(Component.literal(NUMBER_FORMAT.format(definition.armor())).withStyle(ChatFormatting.BLUE)));
+        tooltip.add(Component.literal("RaceCore Armor: ").withStyle(ChatFormatting.GRAY).append(Component.literal(NUMBER_FORMAT.format(BrokenItemManager.isBroken(stack) ? 0.0 : definition.armor())).withStyle(BrokenItemManager.isBroken(stack) ? ChatFormatting.RED : ChatFormatting.BLUE)));
         tooltip.add(Component.literal("Weight: ").withStyle(ChatFormatting.GRAY).append(Component.literal(formatWeight(definition.weight())).withStyle(weightColor(definition.weight()))));
         String movementText = movementPenalty <= 0.000001 ? "0%" : "-" + NUMBER_FORMAT.format(movementPenalty * 100.0) + "%";
         tooltip.add(Component.literal("Movement Speed: ").withStyle(ChatFormatting.GRAY).append(Component.literal(movementText).withStyle(movementPenalty <= 0.000001 ? ChatFormatting.GREEN : ChatFormatting.RED)));

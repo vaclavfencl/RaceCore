@@ -1,5 +1,6 @@
 package com.example.racecore.armor;
 
+import com.example.racecore.durability.BrokenItemManager;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -17,7 +18,14 @@ public final class ArmorManager {
 
     public static double getArmorValue(ItemStack stack) {
         ArmorDefinition definition = getDefinition(stack);
-        return definition == null ? 0.0 : definition.armor();
+
+        if (definition == null
+                || BrokenItemManager.isBroken(stack)) {
+
+            return 0.0;
+        }
+
+        return definition.armor();
     }
 
     public static ArmorWeight getWeight(ItemStack stack) {
@@ -37,9 +45,22 @@ public final class ArmorManager {
         for (EquipmentSlot slot : armorSlots) {
             ItemStack stack = entity.getItemBySlot(slot);
             if (stack.isEmpty()) continue;
+
             ArmorDefinition definition = getDefinition(stack);
-            if (definition == null) { unmapped++; continue; }
-            armor += definition.armor();
+
+            if (definition == null) {
+                unmapped++;
+                continue;
+            }
+
+            /*
+             * Broken armor still physically weighs something if the player
+             * insists on wearing it, but it gives no damage reduction.
+             */
+            if (!BrokenItemManager.isBroken(stack)) {
+                armor += definition.armor();
+            }
+
             switch (definition.weight()) {
                 case LIGHT -> light++;
                 case MEDIUM -> medium++;
@@ -47,7 +68,15 @@ public final class ArmorManager {
                 case ULTRA_HEAVY -> ultraHeavy++;
             }
         }
-        return new ArmorStats(armor, light, medium, heavy, ultraHeavy, unmapped);
+
+        return new ArmorStats(
+                armor,
+                light,
+                medium,
+                heavy,
+                ultraHeavy,
+                unmapped
+        );
     }
 
     public static double getTotalArmor(LivingEntity entity) {
