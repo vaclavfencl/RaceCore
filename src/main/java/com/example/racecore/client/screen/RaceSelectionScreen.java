@@ -3,12 +3,16 @@ package com.example.racecore.client.screen;
 import com.example.racecore.crafting.CraftedEquipmentManager;
 import com.example.racecore.network.raceselection.SelectRacePayload;
 import com.example.racecore.race.RaceDefinition;
+import com.example.racecore.race.RaceManager;
 import com.example.racecore.race.RaceRegistry;
 import com.example.racecore.race.RaceText;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import java.text.DecimalFormat;
@@ -53,6 +57,9 @@ public final class RaceSelectionScreen extends Screen {
     private static final int COLOR_MUTED = 0xFF9A9A9A;
 
     private static final double IMPORTANT_PHYSICAL_DIFFERENCE = 0.30;
+    private static final int SCROLL_STEP = 18;
+    private static final int SCROLLBAR_WIDTH = 3;
+    private static final int SCROLLBAR_MIN_THUMB = 18;
 
     private String selectedRaceId = "human";
 
@@ -61,6 +68,9 @@ public final class RaceSelectionScreen extends Screen {
     private int panelWidth;
     private int panelHeight;
     private int listWidth;
+
+    private int scrollOffset;
+    private int maxScroll;
 
     public RaceSelectionScreen() {
         super(
@@ -73,6 +83,22 @@ public final class RaceSelectionScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+
+        if (minecraft != null
+                && minecraft.player != null) {
+
+            String currentRaceId =
+                    RaceManager.getRaceId(
+                            minecraft.player
+                    );
+
+            if (RaceRegistry.contains(
+                    currentRaceId
+            )) {
+                selectedRaceId =
+                        currentRaceId;
+            }
+        }
 
         /*
          * Never force a minimum larger than the actual GUI. The old screen
@@ -149,8 +175,9 @@ public final class RaceSelectionScreen extends Screen {
                     Button.builder(
                                     RaceText.name(raceId),
                                     button ->
-                                            selectedRaceId =
+                                            selectRace(
                                                     raceId
+                                            )
                             )
                             .bounds(
                                     x,
@@ -162,14 +189,48 @@ public final class RaceSelectionScreen extends Screen {
             );
         }
 
+        int bottomGap = 6;
+        int bottomAvailable =
+                Math.max(
+                        2,
+                        panelWidth
+                                - 24
+                                - bottomGap
+                );
+
+        int returnWidth =
+                Math.min(
+                        150,
+                        bottomAvailable / 2
+                );
+
         int confirmWidth =
                 Math.min(
                         180,
-                        Math.max(
-                                1,
-                                panelWidth - 28
-                        )
+                        bottomAvailable
+                                - returnWidth
                 );
+
+        int bottomY =
+                panelY
+                        + panelHeight
+                        - 27;
+
+        addRenderableWidget(
+                Button.builder(
+                                Component.translatable(
+                                        "screen.racecore.race_selection.return_menu"
+                                ),
+                                button -> returnToMenu()
+                        )
+                        .bounds(
+                                panelX + 12,
+                                bottomY,
+                                returnWidth,
+                                18
+                        )
+                        .build()
+        );
 
         addRenderableWidget(
                 Button.builder(
@@ -183,13 +244,43 @@ public final class RaceSelectionScreen extends Screen {
                                         + panelWidth
                                         - confirmWidth
                                         - 12,
-                                panelY
-                                        + panelHeight
-                                        - 27,
+                                bottomY,
                                 confirmWidth,
                                 18
                         )
                         .build()
+        );
+    }
+
+    private void selectRace(
+            String raceId
+    ) {
+        selectedRaceId =
+                raceId;
+
+        scrollOffset = 0;
+        maxScroll = 0;
+    }
+
+    private void returnToMenu() {
+        if (minecraft == null) {
+            return;
+        }
+
+        if (minecraft.level != null) {
+            minecraft.level.disconnect(
+                    ClientLevel.DEFAULT_QUIT_MESSAGE
+            );
+
+            if (minecraft.isLocalServer()) {
+                minecraft.disconnectWithSavingScreen();
+            } else {
+                minecraft.disconnectWithProgressScreen();
+            }
+        }
+
+        minecraft.gui.setScreen(
+                new TitleScreen()
         );
     }
 
@@ -307,61 +398,143 @@ public final class RaceSelectionScreen extends Screen {
         int x =
                 panelX + listWidth + 34;
 
-        int y =
+        int textRight =
+                panelX + panelWidth - 16;
+
+        int textWidth =
+                Math.max(
+                        40,
+                        textRight - x
+                );
+
+        int titleY =
                 panelY + 39;
 
         graphics.text(
                 font,
                 RaceText.name(selectedRaceId),
                 x,
-                y,
+                titleY,
                 COLOR_TITLE,
                 true
         );
 
-        y += 14;
+        List<Component> characteristics =
+                buildCharacteristicLines(
+                        selectedRaceId,
+                        race,
+                        human
+                );
+
+        List<Component> positives =
+                buildPositiveLines(
+                        race,
+                        human
+                );
+
+        List<Component> negatives =
+                buildNegativeLines(
+                        race,
+                        human
+                );
+
+        int contentTop =
+                panelY + 57;
+
+        /*
+         * Keep the warning and bottom buttons outside the scrollable area.
+         * This prevents long race descriptions from drawing through them.
+         */
+        int contentBottom =
+                panelY + panelHeight - 54;
+
+        int viewportHeight =
+                Math.max(
+                        1,
+                        contentBottom - contentTop
+                );
+
+        int contentHeight =
+                sectionHeight(
+                        characteristics,
+                        textWidth
+                )
+                        + sectionHeight(
+                        positives,
+                        textWidth
+                )
+                        + sectionHeight(
+                        negatives,
+                        textWidth
+                );
+
+        maxScroll =
+                Math.max(
+                        0,
+                        contentHeight
+                                - viewportHeight
+                );
+
+        scrollOffset =
+                Math.max(
+                        0,
+                        Math.min(
+                                scrollOffset,
+                                maxScroll
+                        )
+                );
+
+        int y =
+                contentTop
+                        - scrollOffset;
 
         y = drawSection(
                 graphics,
                 x,
                 y,
+                contentTop,
+                contentBottom,
                 Component.translatable(
                         "screen.racecore.race_selection.characteristics"
                 ),
-                buildCharacteristicLines(
-                        selectedRaceId,
-                        race,
-                        human
-                ),
-                COLOR_CHARACTERISTIC
+                characteristics,
+                COLOR_CHARACTERISTIC,
+                textWidth
         );
 
         y = drawSection(
                 graphics,
                 x,
                 y,
+                contentTop,
+                contentBottom,
                 Component.translatable(
                         "screen.racecore.race_selection.positives"
                 ),
-                buildPositiveLines(
-                        race,
-                        human
-                ),
-                COLOR_POSITIVE
+                positives,
+                COLOR_POSITIVE,
+                textWidth
         );
 
         drawSection(
                 graphics,
                 x,
                 y,
+                contentTop,
+                contentBottom,
                 Component.translatable(
                         "screen.racecore.race_selection.negatives"
                 ),
-                buildNegativeLines(
-                        race,
-                        human
-                ),
-                COLOR_NEGATIVE
+                negatives,
+                COLOR_NEGATIVE,
+                textWidth
+        );
+
+        drawScrollbar(
+                graphics,
+                contentTop,
+                contentBottom,
+                contentHeight
         );
 
         graphics.text(
@@ -380,51 +553,252 @@ public final class RaceSelectionScreen extends Screen {
             GuiGraphicsExtractor graphics,
             int x,
             int y,
+            int contentTop,
+            int contentBottom,
             Component heading,
             List<Component> lines,
-            int lineColor
+            int lineColor,
+            int textWidth
     ) {
-        graphics.text(
-                font,
+        y = drawWrappedLine(
+                graphics,
                 heading,
                 x,
                 y,
+                contentTop,
+                contentBottom,
                 COLOR_HEADING,
-                true
+                true,
+                textWidth
         );
 
-        y += 11;
+        y += 2;
 
         if (lines.isEmpty()) {
-            graphics.text(
-                    font,
+            y = drawWrappedLine(
+                    graphics,
                     Component.translatable(
                             "screen.racecore.race_selection.none"
                     ),
                     x,
                     y,
+                    contentTop,
+                    contentBottom,
                     COLOR_MUTED,
-                    false
+                    false,
+                    textWidth
             );
 
-            return y + 11;
+            return y + 3;
         }
 
         for (Component line : lines) {
-            graphics.text(
-                    font,
+            y = drawWrappedLine(
+                    graphics,
                     Component.literal("- ")
                             .append(line),
                     x,
                     y,
+                    contentTop,
+                    contentBottom,
                     lineColor,
-                    false
+                    false,
+                    textWidth
             );
+        }
+
+        return y + 3;
+    }
+
+    private int drawWrappedLine(
+            GuiGraphicsExtractor graphics,
+            Component text,
+            int x,
+            int y,
+            int contentTop,
+            int contentBottom,
+            int color,
+            boolean shadow,
+            int textWidth
+    ) {
+        List<FormattedCharSequence> wrapped =
+                font.split(
+                        text,
+                        textWidth
+                );
+
+        for (FormattedCharSequence line : wrapped) {
+            if (y >= contentTop
+                    && y + 9 <= contentBottom) {
+
+                graphics.text(
+                        font,
+                        line,
+                        x,
+                        y,
+                        color,
+                        shadow
+                );
+            }
 
             y += 9;
         }
 
-        return y + 3;
+        return y;
+    }
+
+    private int sectionHeight(
+            List<Component> lines,
+            int textWidth
+    ) {
+        int height = 11;
+
+        if (lines.isEmpty()) {
+            height += 9;
+        } else {
+            for (Component line : lines) {
+                Component bulletLine =
+                        Component.literal("- ")
+                                .append(line);
+
+                int wrappedLines =
+                        Math.max(
+                                1,
+                                font.split(
+                                        bulletLine,
+                                        textWidth
+                                ).size()
+                        );
+
+                height +=
+                        wrappedLines * 9;
+            }
+        }
+
+        return height + 3;
+    }
+
+    private void drawScrollbar(
+            GuiGraphicsExtractor graphics,
+            int contentTop,
+            int contentBottom,
+            int contentHeight
+    ) {
+        if (maxScroll <= 0) {
+            return;
+        }
+
+        int trackX =
+                panelX + panelWidth - 9;
+
+        int trackHeight =
+                contentBottom - contentTop;
+
+        graphics.fill(
+                trackX,
+                contentTop,
+                trackX + SCROLLBAR_WIDTH,
+                contentBottom,
+                0xFF3A3A3A
+        );
+
+        int thumbHeight =
+                Math.max(
+                        SCROLLBAR_MIN_THUMB,
+                        (int) Math.round(
+                                (double) trackHeight
+                                        * trackHeight
+                                        / Math.max(
+                                        1,
+                                        contentHeight
+                                )
+                        )
+                );
+
+        thumbHeight =
+                Math.min(
+                        trackHeight,
+                        thumbHeight
+                );
+
+        int thumbTravel =
+                Math.max(
+                        0,
+                        trackHeight
+                                - thumbHeight
+                );
+
+        int thumbY =
+                contentTop
+                        + (int) Math.round(
+                        (double) scrollOffset
+                                / maxScroll
+                                * thumbTravel
+                );
+
+        graphics.fill(
+                trackX,
+                thumbY,
+                trackX + SCROLLBAR_WIDTH,
+                thumbY + thumbHeight,
+                0xFFB8B8B8
+        );
+    }
+
+    @Override
+    public boolean mouseScrolled(
+            double mouseX,
+            double mouseY,
+            double horizontalAmount,
+            double verticalAmount
+    ) {
+        int contentLeft =
+                panelX + listWidth + 24;
+
+        int contentRight =
+                panelX + panelWidth;
+
+        int contentTop =
+                panelY + 35;
+
+        int contentBottom =
+                panelY + panelHeight - 35;
+
+        if (maxScroll > 0
+                && mouseX >= contentLeft
+                && mouseX <= contentRight
+                && mouseY >= contentTop
+                && mouseY <= contentBottom) {
+
+            int direction =
+                    verticalAmount > 0.0
+                            ? -1
+                            : verticalAmount < 0.0
+                            ? 1
+                            : 0;
+
+            if (direction != 0) {
+                scrollOffset =
+                        Math.max(
+                                0,
+                                Math.min(
+                                        maxScroll,
+                                        scrollOffset
+                                                + direction
+                                                * SCROLL_STEP
+                                )
+                        );
+
+                return true;
+            }
+        }
+
+        return super.mouseScrolled(
+                mouseX,
+                mouseY,
+                horizontalAmount,
+                verticalAmount
+        );
     }
 
     private List<Component> buildCharacteristicLines(

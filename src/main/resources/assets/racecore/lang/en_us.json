@@ -139,5 +139,6 @@
   "command.racecore.death.barrel": "Death Barrel: %1$s | X: %2$s Y: %3$s Z: %4$s",
   "message.racecore.death.last": "Last death: %1$s | X: %2$s Y: %3$s Z: %4$s",
   "message.racecore.death.barrel": "Death Barrel: %1$s | X: %2$s Y: %3$s Z: %4$s | Use /death to show this again.",
-  "message.racecore.death.use_command": "Use /death to show this location again."
+  "message.racecore.death.use_command": "Use /death to show this location again.",
+  "screen.racecore.race_selection.return_menu": "Return to Menu"
 }

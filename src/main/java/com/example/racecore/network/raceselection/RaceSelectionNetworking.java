@@ -13,10 +13,10 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 /**
  * Common/server networking for race selection.
  *
- * The client only requests a race. The server validates and applies it.
+ * The same selection screen is used both for mandatory first-login selection
+ * and for later /race selection changes.
  */
 @EventBusSubscriber(modid = RaceCore.MODID)
-
 public final class RaceSelectionNetworking {
     private RaceSelectionNetworking() {
     }
@@ -48,30 +48,32 @@ public final class RaceSelectionNetworking {
             return;
         }
 
-        /*
-         * Normal first-time selection is one-time only.
-         * A future respec item can deliberately reset/authorize this state
-         * before reopening the same UI.
-         */
-        if (RaceSelectionState.hasSelectedRace(player)) {
-            return;
-        }
-
         String raceId =
-                RaceRegistry.normalizeId(payload.raceId());
+                RaceRegistry.normalizeId(
+                        payload.raceId()
+                );
 
         if (!RaceRegistry.contains(raceId)) {
             return;
         }
 
-        if (!RaceManager.setRace(player, raceId)) {
+        if (!RaceManager.setRace(
+                player,
+                raceId
+        )) {
             return;
         }
 
-        RaceSelectionState.markSelected(player);
+        /*
+         * First selection marks the persistent onboarding state complete.
+         * Later selections simply change the existing race.
+         */
+        RaceSelectionState.markSelected(
+                player
+        );
 
         RaceCore.LOGGER.info(
-                "{} confirmed RaceCore race '{}'.",
+                "{} selected RaceCore race '{}'.",
                 player.getGameProfile().name(),
                 raceId
         );

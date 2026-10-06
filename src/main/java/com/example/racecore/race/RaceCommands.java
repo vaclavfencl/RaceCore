@@ -1,5 +1,6 @@
 package com.example.racecore.race;
 
+import com.example.racecore.network.raceselection.OpenRaceSelectionPayload;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -9,6 +10,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 public final class RaceCommands {
     private RaceCommands() {
@@ -18,6 +20,12 @@ public final class RaceCommands {
         dispatcher.register(
                 Commands.literal("race")
                         .executes(RaceCommands::showCurrentRace)
+                        .then(
+                                Commands.literal("selection")
+                                        .executes(
+                                                RaceCommands::openSelection
+                                        )
+                        )
                         .then(
                                 Commands.argument("race", StringArgumentType.word())
                                         .suggests((context, builder) ->
@@ -29,6 +37,22 @@ public final class RaceCommands {
                                         .executes(RaceCommands::changeRace)
                         )
         );
+    }
+
+    private static int openSelection(
+            CommandContext<CommandSourceStack> context
+    ) throws CommandSyntaxException {
+
+        ServerPlayer player =
+                context.getSource()
+                        .getPlayerOrException();
+
+        PacketDistributor.sendToPlayer(
+                player,
+                OpenRaceSelectionPayload.INSTANCE
+        );
+
+        return 1;
     }
 
     private static int showCurrentRace(
