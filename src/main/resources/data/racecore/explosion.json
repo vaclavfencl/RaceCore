@@ -1,0 +1,6 @@
+{
+  "crossbowRocketMinimumExplosions": 1,
+  "noBlockDamageEntityTypes": [
+    "minecraft:creeper"
+  ]
+}
