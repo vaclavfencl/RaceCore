@@ -2,6 +2,7 @@ package com.example.racecore.enchanting;
 
 import com.example.racecore.armor.ProtectionManager;
 import com.example.racecore.armor.ProtectionRegistry;
+import com.example.racecore.weapon.RaceCoreWeapons;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
@@ -20,52 +21,79 @@ import java.util.Set;
  * Effective capacity continues to use the shared race enchant-cap system.
  *
  * Utility capacity has an item-specific base:
- * - default weapon/tool: 3
- * - crossbow: 4
- * - trident: 4
- * - fishing rod: 6
+ * - default weapon/tool: 4
+ * - crossbow: 5
+ * - trident: 5
+ * - fishing rod: 7
  *
  * The race enchant-cap adjustment is then applied on top, so racial
  * enchantment bonuses/penalties still affect both Effective and Utility.
  *
+ * Gold material bonus:
+ * - all vanilla golden weapons/tools: +2 Utility
+ * - RaceCore golden dagger/glaive/longsword: +2 Utility
+ * - this bonus does NOT affect Effective capacity
+ *
+ * Category rule:
+ * - Effective: numerical combat/work output
+ * - Utility: behavior/functionality changes
+ * - Both: consumes BOTH pools at its enchantment level
+ *
+ * Current notable category choices:
+ * - Fire Aspect, Flame: Both
+ * - Piercing: Effective
+ * - Multishot, Quick Charge: Utility
+ * - Lunge: Utility
+ * - Impaling, Density, Breach: Effective
+ * - Loyalty, Channeling, Riptide, Wind Burst: Utility by fallback
+ * - Fortune: Effective
+ * - Silk Touch: Utility
+ *
  * Example with the current default race cap of 4:
- * - normal race: default tool utility 3
- * - Dwarf/Dragonborn (+1 cap): default tool utility 4
- * - Troll (-1 cap): default tool utility 2
+ * - normal race: default tool utility 4
+ * - Dwarf/Dragonborn (+1 cap): default tool utility 5
+ * - Troll (-1 cap): default tool utility 3
+ * - normal-race golden tool: default tool utility 6
  */
 public final class WeaponToolEnchantingManager {
-    private static final int DEFAULT_UTILITY_CAPACITY = 3;
+    private static final int DEFAULT_UTILITY_CAPACITY = 4;
     private static final int CROSSBOW_UTILITY_CAPACITY = 4;
     private static final int TRIDENT_UTILITY_CAPACITY = 4;
     private static final int FISHING_ROD_UTILITY_CAPACITY = 6;
 
+    private static final int GOLD_UTILITY_BONUS = 2;
+
     private static final Set<String> EFFECTIVE_ENCHANTMENTS =
             Set.of(
-                    // Melee / general weapon power
+                    // Direct melee combat output
                     "minecraft:sharpness",
                     "minecraft:smite",
                     "minecraft:bane_of_arthropods",
-                    "minecraft:fire_aspect",
-                    "minecraft:looting",
                     "minecraft:sweeping_edge",
-                    "minecraft:lunge",
 
-                    // Bow / crossbow
+                    // Bow / crossbow direct output
                     "minecraft:power",
-                    "minecraft:flame",
-                    "minecraft:multishot",
                     "minecraft:piercing",
-                    "minecraft:quick_charge",
 
-                    // Trident / mace
+                    // Trident / mace direct output
                     "minecraft:impaling",
                     "minecraft:density",
                     "minecraft:breach",
 
-                    // Mining / gathering effectiveness
-                    "minecraft:efficiency",
-                    "minecraft:fortune",
-                    "minecraft:silk_touch"
+                    // Tool / gathering output
+                    "minecraft:efficiency"
+            );
+
+    /*
+     * BOTH means the enchantment consumes its level from BOTH capacity pools.
+     *
+     * Example:
+     * Fire Aspect II = 2 Effective + 2 Utility.
+     */
+    private static final Set<String> BOTH_ENCHANTMENTS =
+            Set.of(
+                    "minecraft:fire_aspect",
+                    "minecraft:flame"
             );
 
     private WeaponToolEnchantingManager() {
@@ -125,6 +153,7 @@ public final class WeaponToolEnchantingManager {
                 0,
                 baseCapacity
                         + raceAdjustment
+                        + getMaterialUtilityBonus(stack)
         );
     }
 
@@ -144,6 +173,31 @@ public final class WeaponToolEnchantingManager {
         }
 
         return DEFAULT_UTILITY_CAPACITY;
+    }
+
+    private static int getMaterialUtilityBonus(
+            ItemStack stack
+    ) {
+        return isGoldWeaponOrTool(stack)
+                ? GOLD_UTILITY_BONUS
+                : 0;
+    }
+
+    private static boolean isGoldWeaponOrTool(
+            ItemStack stack
+    ) {
+        if (stack == null || stack.isEmpty()) {
+            return false;
+        }
+
+        return stack.is(Items.GOLDEN_SWORD)
+                || stack.is(Items.GOLDEN_AXE)
+                || stack.is(Items.GOLDEN_PICKAXE)
+                || stack.is(Items.GOLDEN_SHOVEL)
+                || stack.is(Items.GOLDEN_HOE)
+                || stack.is(RaceCoreWeapons.GOLDEN_DAGGER.get())
+                || stack.is(RaceCoreWeapons.GOLDEN_GLAIVE.get())
+                || stack.is(RaceCoreWeapons.GOLDEN_LONGSWORD.get());
     }
 
     public static int getUsedEffectiveCapacity(
@@ -186,8 +240,29 @@ public final class WeaponToolEnchantingManager {
                         .map(key -> key.identifier())
                         .orElse(null);
 
+        if (id == null) {
+            return false;
+        }
+
+        String idString =
+                id.toString();
+
+        return EFFECTIVE_ENCHANTMENTS
+                .contains(idString)
+                || BOTH_ENCHANTMENTS
+                .contains(idString);
+    }
+
+    public static boolean isBothEnchantment(
+            Holder<Enchantment> enchantment
+    ) {
+        Identifier id =
+                enchantment.unwrapKey()
+                        .map(key -> key.identifier())
+                        .orElse(null);
+
         return id != null
-                && EFFECTIVE_ENCHANTMENTS
+                && BOTH_ENCHANTMENTS
                 .contains(id.toString());
     }
 
@@ -206,6 +281,17 @@ public final class WeaponToolEnchantingManager {
         String idString =
                 id.toString();
 
+        /*
+         * BOTH enchantments deliberately count in Utility as well as
+         * Effective. getUsedCapacity() calls both category checks separately,
+         * so their level is charged to both pools.
+         */
+        if (BOTH_ENCHANTMENTS
+                .contains(idString)) {
+
+            return true;
+        }
+
         if (EFFECTIVE_ENCHANTMENTS
                 .contains(idString)) {
 
@@ -213,8 +299,11 @@ public final class WeaponToolEnchantingManager {
         }
 
         /*
-         * Curses do not consume capacity.
-         * Mending is disabled globally by RaceCore.
+         * Everything else defaults to Utility: Unbreaking, Looting,
+         * Knockback, Punch, Infinity, Multishot, Quick Charge, Lunge,
+         * Silk Touch, Loyalty, Channeling, Riptide, Wind Burst, etc.
+         *
+         * Curses consume no capacity and Mending is disabled globally.
          */
         return !idString.equals(
                         "minecraft:binding_curse"

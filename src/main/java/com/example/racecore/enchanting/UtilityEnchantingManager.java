@@ -19,23 +19,28 @@ import net.minecraft.world.item.equipment.Equippable;
  * Utility enchant capacity for RaceCore armor.
  *
  * Base Utility capacity is slot-specific:
- * - Helmet:     4
- * - Chestplate: 3
- * - Leggings:   3
- * - Boots:      5
+ * - Helmet:     5
+ * - Chestplate: 4
+ * - Leggings:   4
+ * - Boots:      6
+ *
+ * This is +1 over the previous baseline. The race enchant-capacity modifier
+ * still applies, so Troll (-1) lands on the old normal-race Utility values
+ * instead of being squeezed below them.
  *
  * Race enchant-capacity modifiers apply to BOTH Protection and Utility.
  * Material Utility bonuses (currently Gold +2) apply only to Utility.
  *
  * Example:
- * normal race Gold boots = 5 + 0 + 2 = 7 Utility
- * +1 enchant-cap race    = 5 + 1 + 2 = 8 Utility
+ * normal race Gold boots = 6 + 0 + 2 = 8 Utility
+ * Troll Gold boots       = 6 - 1 + 2 = 7 Utility
+ * +1 enchant-cap race    = 6 + 1 + 2 = 9 Utility
  */
 public final class UtilityEnchantingManager {
-    private static final int HELMET_UTILITY_CAPACITY = 4;
-    private static final int CHESTPLATE_UTILITY_CAPACITY = 3;
-    private static final int LEGGINGS_UTILITY_CAPACITY = 3;
-    private static final int BOOTS_UTILITY_CAPACITY = 5;
+    private static final int HELMET_UTILITY_CAPACITY = 5;
+    private static final int CHESTPLATE_UTILITY_CAPACITY = 4;
+    private static final int LEGGINGS_UTILITY_CAPACITY = 4;
+    private static final int BOOTS_UTILITY_CAPACITY = 6;
 
     private UtilityEnchantingManager() {
     }
