@@ -9,6 +9,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.tags.EnchantmentTags;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -17,6 +18,7 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Shared rules for Phase 9.0 deterministic enchanting.
@@ -27,6 +29,26 @@ import java.util.Map;
  */
 public final class DeterministicEnchantingManager {
     private static final int GENERIC_UTILITY_CAPACITY = 4;
+    private static final int RACEC0RE_PROTECTION_MAX_LEVEL = 5;
+
+    /*
+     * Axes are deliberately dual-role equipment in RaceCore:
+     * they retain all normal tool enchantments, while also gaining the
+     * general melee enchantments below.
+     *
+     * Sword-specific mechanics such as Sweeping Edge are intentionally
+     * excluded. The axe still uses the SAME Effective and Utility pools;
+     * being both a weapon and a tool does not grant extra capacity.
+     */
+    private static final Set<String> AXE_COMBAT_ENCHANTMENTS =
+            Set.of(
+                    "minecraft:sharpness",
+                    "minecraft:smite",
+                    "minecraft:bane_of_arthropods",
+                    "minecraft:fire_aspect",
+                    "minecraft:knockback",
+                    "minecraft:looting"
+            );
 
     private DeterministicEnchantingManager() {
     }
@@ -67,9 +89,21 @@ public final class DeterministicEnchantingManager {
             return false;
         }
 
-        return stack.isPrimaryItemFor(
+        if (stack.isPrimaryItemFor(
                 enchantment
-        );
+        )) {
+            return true;
+        }
+
+        /*
+         * Vanilla treats axes primarily as tools at the enchanting table.
+         * RaceCore treats them as both tools and melee weapons, so explicitly
+         * expose the general melee enchantments while keeping the vanilla
+         * tool-enchantment set as-is.
+         */
+        return stack.is(ItemTags.AXES)
+                && AXE_COMBAT_ENCHANTMENTS
+                .contains(id);
     }
 
     public static String getEnchantmentId(
@@ -86,6 +120,35 @@ public final class DeterministicEnchantingManager {
                                         .toString()
                 )
                 .orElse("");
+    }
+
+    /**
+     * RaceCore extends every protection enchantment registered in
+     * protection.json to tier V. Everything else keeps its vanilla maximum.
+     *
+     * This is shared by both client preview controls and server validation,
+     * so the UI cannot offer a level the server later rejects.
+     */
+    public static int getAllowedMaxLevel(
+            Holder<Enchantment> enchantment
+    ) {
+        if (enchantment == null) {
+            return 0;
+        }
+
+        String id =
+                getEnchantmentId(
+                        enchantment
+                );
+
+        if (ProtectionRegistry.get(id)
+                != null) {
+
+            return RACEC0RE_PROTECTION_MAX_LEVEL;
+        }
+
+        return enchantment.value()
+                .getMaxLevel();
     }
 
     public static int getCurrentLevel(
@@ -186,8 +249,9 @@ public final class DeterministicEnchantingManager {
 
             if (target <= current
                     || target
-                    > enchantment.value()
-                    .getMaxLevel()) {
+                    > getAllowedMaxLevel(
+                            enchantment
+                    )) {
 
                 return false;
             }

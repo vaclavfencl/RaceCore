@@ -2062,9 +2062,10 @@ public final class DeterministicEnchantmentScreen
             return false;
         }
 
-        if (target >= option.enchantment()
-                .value()
-                .getMaxLevel()) {
+        if (target >= DeterministicEnchantingManager
+                .getAllowedMaxLevel(
+                        option.enchantment()
+                )) {
 
             return false;
         }
