@@ -1,0 +1,32 @@
+{
+  "gives": {
+    "id": "minecraft:buried_trial_chambers_map",
+    "count": 1
+  },
+  "max_uses": 12,
+  "reputation_discount": 0.0,
+  "wants": {
+    "id": "minecraft:emerald",
+    "count": 40
+  },
+  "xp": 10,
+  "given_item_modifier": [
+    {
+      "type": "minecraft:exploration_map",
+      "destination": "#minecraft:on_buried_trial_chambers_maps",
+      "search_radius": 100,
+      "decoration": "minecraft:trial_chambers"
+    },
+    {
+      "type": "minecraft:filtered",
+      "item_filter": {
+        "predicates": {
+          "minecraft:map_id": {}
+        }
+      },
+      "on_fail": {
+        "type": "minecraft:discard"
+      }
+    }
+  ]
+}

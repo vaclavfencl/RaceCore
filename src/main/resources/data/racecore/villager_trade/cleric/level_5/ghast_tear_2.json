@@ -1,0 +1,13 @@
+{
+  "gives": {
+    "id": "minecraft:ghast_tear",
+    "count": 2
+  },
+  "max_uses": 12,
+  "reputation_discount": 0.0,
+  "wants": {
+    "id": "minecraft:emerald",
+    "count": 60
+  },
+  "xp": 20
+}

@@ -1,0 +1,7 @@
+{
+  "replace": true,
+  "values": [
+    "racecore:cartographer/level_3/ocean_monument_map",
+    "racecore:cartographer/level_3/buried_trial_chambers_map"
+  ]
+}

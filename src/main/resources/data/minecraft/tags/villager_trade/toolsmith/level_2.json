@@ -1,0 +1,7 @@
+{
+  "replace": true,
+  "values": [
+    "racecore:toolsmith/level_2/iron_shovel",
+    "racecore:toolsmith/level_2/iron_hoe"
+  ]
+}

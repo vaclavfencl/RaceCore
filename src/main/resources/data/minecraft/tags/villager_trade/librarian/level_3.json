@@ -1,0 +1,7 @@
+{
+  "replace": true,
+  "values": [
+    "racecore:librarian/level_3/name_tag",
+    "racecore:librarian/level_3/lectern"
+  ]
+}

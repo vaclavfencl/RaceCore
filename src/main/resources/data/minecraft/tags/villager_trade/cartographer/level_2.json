@@ -1,0 +1,7 @@
+{
+  "replace": true,
+  "values": [
+    "racecore:cartographer/level_2/jungle_pyramid_map",
+    "racecore:cartographer/level_2/swamp_hut_map"
+  ]
+}

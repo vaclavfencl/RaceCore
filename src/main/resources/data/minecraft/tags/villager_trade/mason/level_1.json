@@ -1,0 +1,7 @@
+{
+  "replace": true,
+  "values": [
+    "racecore:mason/level_1/bricks_16",
+    "racecore:mason/level_1/terracotta_16"
+  ]
+}

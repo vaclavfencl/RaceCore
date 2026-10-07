@@ -1,0 +1,7 @@
+{
+  "replace": true,
+  "values": [
+    "racecore:toolsmith/level_1/stone_pickaxe",
+    "racecore:toolsmith/level_1/shears"
+  ]
+}

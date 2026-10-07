@@ -1,0 +1,7 @@
+{
+  "replace": true,
+  "values": [
+    "racecore:weaponsmith/level_5/wind_charge_8",
+    "racecore:weaponsmith/level_5/fire_charge_16"
+  ]
+}

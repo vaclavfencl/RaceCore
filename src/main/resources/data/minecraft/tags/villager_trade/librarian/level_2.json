@@ -1,0 +1,7 @@
+{
+  "replace": true,
+  "values": [
+    "racecore:librarian/level_2/writable_book",
+    "racecore:librarian/level_2/lantern_2"
+  ]
+}

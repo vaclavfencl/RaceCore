@@ -1,0 +1,13 @@
+{
+  "gives": {
+    "id": "minecraft:clock",
+    "count": 1
+  },
+  "max_uses": 12,
+  "reputation_discount": 0.0,
+  "wants": {
+    "id": "minecraft:emerald",
+    "count": 38
+  },
+  "xp": 15
+}

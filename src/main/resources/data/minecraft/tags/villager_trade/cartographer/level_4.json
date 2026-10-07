@@ -1,0 +1,7 @@
+{
+  "replace": true,
+  "values": [
+    "racecore:cartographer/level_4/buried_ancient_city_map",
+    "racecore:cartographer/level_4/buried_mineshaft_map"
+  ]
+}

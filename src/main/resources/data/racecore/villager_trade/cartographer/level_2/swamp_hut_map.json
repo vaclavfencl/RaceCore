@@ -1,0 +1,32 @@
+{
+  "gives": {
+    "id": "minecraft:swamp_hut_map",
+    "count": 1
+  },
+  "max_uses": 12,
+  "reputation_discount": 0.0,
+  "wants": {
+    "id": "minecraft:emerald",
+    "count": 28
+  },
+  "xp": 6,
+  "given_item_modifier": [
+    {
+      "type": "minecraft:exploration_map",
+      "destination": "#minecraft:on_swamp_hut_maps",
+      "search_radius": 100,
+      "decoration": "minecraft:swamp_hut"
+    },
+    {
+      "type": "minecraft:filtered",
+      "item_filter": {
+        "predicates": {
+          "minecraft:map_id": {}
+        }
+      },
+      "on_fail": {
+        "type": "minecraft:discard"
+      }
+    }
+  ]
+}

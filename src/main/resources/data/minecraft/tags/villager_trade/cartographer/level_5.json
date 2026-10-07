@@ -1,0 +1,7 @@
+{
+  "replace": true,
+  "values": [
+    "racecore:cartographer/level_5/woodland_mansion_map",
+    "racecore:cartographer/level_5/desert_pyramid_map"
+  ]
+}

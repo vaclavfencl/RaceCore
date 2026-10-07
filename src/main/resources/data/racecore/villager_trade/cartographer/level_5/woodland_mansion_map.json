@@ -1,0 +1,31 @@
+{
+  "gives": {
+    "id": "minecraft:woodland_mansion_map",
+    "count": 1
+  },
+  "max_uses": 12,
+  "reputation_discount": 0.0,
+  "wants": {
+    "id": "minecraft:emerald",
+    "count": 60
+  },
+  "xp": 20,
+  "given_item_modifier": [
+    {
+      "type": "minecraft:exploration_map",
+      "destination": "#minecraft:on_woodland_mansion_maps",
+      "search_radius": 100
+    },
+    {
+      "type": "minecraft:filtered",
+      "item_filter": {
+        "predicates": {
+          "minecraft:map_id": {}
+        }
+      },
+      "on_fail": {
+        "type": "minecraft:discard"
+      }
+    }
+  ]
+}

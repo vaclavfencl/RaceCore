@@ -1,0 +1,7 @@
+{
+  "replace": true,
+  "values": [
+    "racecore:fisherman/level_1/cod_bucket",
+    "racecore:fisherman/level_1/salmon_8"
+  ]
+}

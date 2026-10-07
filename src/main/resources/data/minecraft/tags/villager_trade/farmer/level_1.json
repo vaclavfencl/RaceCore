@@ -1,0 +1,7 @@
+{
+  "replace": true,
+  "values": [
+    "racecore:farmer/level_1/pumpkin_seeds_8",
+    "racecore:farmer/level_1/melon_seeds_8"
+  ]
+}

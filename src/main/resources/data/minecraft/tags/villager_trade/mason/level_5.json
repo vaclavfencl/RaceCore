@@ -1,0 +1,7 @@
+{
+  "replace": true,
+  "values": [
+    "racecore:mason/level_5/quartz_block_16",
+    "racecore:mason/level_5/prismarine_bricks_16"
+  ]
+}

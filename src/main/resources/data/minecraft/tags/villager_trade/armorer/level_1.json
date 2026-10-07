@@ -1,0 +1,9 @@
+{
+  "replace": true,
+  "values": [
+    "racecore:armorer/level_1/chainmail_helmet",
+    "racecore:armorer/level_1/chainmail_boots",
+    "racecore:armorer/level_1/chainmail_leggings",
+    "racecore:armorer/level_1/chainmail_chestplate"
+  ]
+}

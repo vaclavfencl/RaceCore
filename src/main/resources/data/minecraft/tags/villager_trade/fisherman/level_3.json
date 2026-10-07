@@ -1,0 +1,7 @@
+{
+  "replace": true,
+  "values": [
+    "racecore:fisherman/level_3/fishing_rod",
+    "racecore:fisherman/level_3/campfire"
+  ]
+}

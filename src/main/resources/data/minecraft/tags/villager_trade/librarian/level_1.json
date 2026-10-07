@@ -1,0 +1,7 @@
+{
+  "replace": true,
+  "values": [
+    "racecore:librarian/level_1/book_4",
+    "racecore:librarian/level_1/bookshelf"
+  ]
+}

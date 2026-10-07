@@ -1,0 +1,7 @@
+{
+  "replace": true,
+  "values": [
+    "racecore:toolsmith/level_4/clock",
+    "racecore:toolsmith/level_4/spyglass"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "gives": {
+    "id": "minecraft:glow_berries",
+    "count": 8
+  },
+  "max_uses": 12,
+  "reputation_discount": 0.0,
+  "wants": {
+    "id": "minecraft:emerald",
+    "count": 42
+  },
+  "xp": 20
+}

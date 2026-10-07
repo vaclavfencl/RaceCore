@@ -1,0 +1,13 @@
+{
+  "gives": {
+    "id": "minecraft:chainmail_leggings",
+    "count": 1
+  },
+  "max_uses": 12,
+  "reputation_discount": 0.0,
+  "wants": {
+    "id": "minecraft:emerald",
+    "count": 18
+  },
+  "xp": 2
+}

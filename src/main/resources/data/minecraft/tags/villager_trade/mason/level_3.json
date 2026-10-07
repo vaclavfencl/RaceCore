@@ -1,0 +1,7 @@
+{
+  "replace": true,
+  "values": [
+    "racecore:mason/level_3/dripstone_block_16",
+    "racecore:mason/level_3/tuff_bricks_16"
+  ]
+}

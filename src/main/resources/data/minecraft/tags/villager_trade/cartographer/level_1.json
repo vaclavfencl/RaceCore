@@ -1,0 +1,7 @@
+{
+  "replace": true,
+  "values": [
+    "racecore:cartographer/level_1/map",
+    "racecore:cartographer/level_1/compass"
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "gives": {
+    "id": "minecraft:buried_ancient_city_map",
+    "count": 1
+  },
+  "max_uses": 12,
+  "reputation_discount": 0.0,
+  "wants": {
+    "id": "minecraft:emerald",
+    "count": 52
+  },
+  "xp": 15,
+  "given_item_modifier": [
+    {
+      "type": "minecraft:exploration_map",
+      "destination": "#minecraft:on_ancient_city_maps",
+      "search_radius": 100,
+      "decoration": "minecraft:ancient_city"
+    },
+    {
+      "type": "minecraft:filtered",
+      "item_filter": {
+        "predicates": {
+          "minecraft:map_id": {}
+        }
+      },
+      "on_fail": {
+        "type": "minecraft:discard"
+      }
+    }
+  ]
+}

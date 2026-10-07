@@ -1,0 +1,7 @@
+{
+  "replace": true,
+  "values": [
+    "racecore:weaponsmith/level_2/iron_sword",
+    "racecore:weaponsmith/level_2/iron_axe"
+  ]
+}

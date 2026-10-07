@@ -1,0 +1,7 @@
+{
+  "replace": true,
+  "values": [
+    "racecore:shepherd/level_1/white_dye_8",
+    "racecore:shepherd/level_1/black_dye_8"
+  ]
+}
