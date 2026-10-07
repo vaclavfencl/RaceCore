@@ -4,6 +4,7 @@ import com.example.racecore.armor.ArmorManager;
 import com.example.racecore.armor.ProtectionEnchantmentDefinition;
 import com.example.racecore.armor.ProtectionManager;
 import com.example.racecore.armor.ProtectionRegistry;
+import com.example.racecore.weapon.RaceCoreWeapons;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
@@ -96,10 +97,42 @@ public final class DeterministicEnchantingManager {
         }
 
         /*
+         * RaceCore special-weapon table permissions.
+         *
+         * Glaive:
+         * - Lunge is part of the weapon's intended movement/reach identity.
+         *
+         * Longsword:
+         * - Sweeping Edge is explicitly available.
+         *
+         * Flail:
+         * - Sweeping Edge is explicitly available and only buffs the custom
+         *   fully-charged area attack. It never buffs the flail's single-target
+         *   150% attack.
+         *
+         * Club and daggers intentionally receive no extra permissions here.
+         */
+        if (RaceCoreWeapons.isGlaive(stack)
+                && "minecraft:lunge".equals(id)) {
+
+            return true;
+        }
+
+        if ((RaceCoreWeapons.isLongsword(stack)
+                || RaceCoreWeapons.isFlail(stack))
+                && "minecraft:sweeping_edge".equals(id)) {
+
+            return true;
+        }
+
+        /*
          * Vanilla treats axes primarily as tools at the enchanting table.
          * RaceCore treats them as both tools and melee weapons, so explicitly
          * expose the general melee enchantments while keeping the vanilla
          * tool-enchantment set as-is.
+         *
+         * Axes still use the SAME Effective/Utility capacity pools. Being both
+         * weapon and tool does not create a second capacity pool.
          */
         return stack.is(ItemTags.AXES)
                 && AXE_COMBAT_ENCHANTMENTS
