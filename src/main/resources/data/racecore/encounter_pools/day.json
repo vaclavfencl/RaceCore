@@ -1,0 +1,50 @@
+{
+  "entries": [
+    {
+      "entity": "minecraft:spider",
+      "weight": 55,
+      "min": 3,
+      "max": 6
+    },
+    {
+      "entity": "minecraft:creeper",
+      "weight": 35,
+      "min": 2,
+      "max": 4
+    },
+    {
+      "entity": "minecraft:witch",
+      "weight": 10,
+      "min": 2,
+      "max": 3
+    }
+  ],
+  "biomeOverrides": {
+    "minecraft:desert": [
+      {
+        "entity": "minecraft:husk",
+        "weight": 45,
+        "min": 3,
+        "max": 6
+      },
+      {
+        "entity": "minecraft:spider",
+        "weight": 30,
+        "min": 3,
+        "max": 6
+      },
+      {
+        "entity": "minecraft:creeper",
+        "weight": 20,
+        "min": 2,
+        "max": 4
+      },
+      {
+        "entity": "minecraft:witch",
+        "weight": 5,
+        "min": 2,
+        "max": 3
+      }
+    ]
+  }
+}
