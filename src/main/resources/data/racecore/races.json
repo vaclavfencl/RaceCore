@@ -139,9 +139,10 @@
     "enchantmentCapacity": 3,
     "permanentNightVision": true,
     "passiveRegenerationPerSecond": 1.0,
+    "darkLightThreshold": 5,
     "darkMovementMultiplier": 1.15,
-    "darkDamageMultiplier": 1.3,
-    "brightDamageMultiplier": 0.85,
+    "darkDamageMultiplier": 1.4,
+    "brightDamageMultiplier": 0.9,
     "rangedAllowedInBrightLight": false
   },
   "gargoyle": {
