@@ -1,0 +1,27 @@
+{
+  "clock": "minecraft:overworld",
+  "period_ticks": 24000,
+  "tracks": {
+    "minecraft:visual/sky_light_factor": {
+      "keyframes": [
+        {
+          "ticks": 730,
+          "value": 0.0
+        },
+        {
+          "ticks": 11270,
+          "value": 0.0
+        },
+        {
+          "ticks": 13140,
+          "value": 0.359098
+        },
+        {
+          "ticks": 22860,
+          "value": 0.359098
+        }
+      ],
+      "modifier": "maximum"
+    }
+  }
+}
