@@ -1,0 +1,19 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": "#minecraft:is_mountain",
+  "features": [
+    "racecore:mountain_coal_lower_bonus",
+    "racecore:mountain_coal_upper_bonus",
+    "racecore:mountain_copper_bonus",
+    "racecore:mountain_gold_bonus",
+    "racecore:mountain_gold_lower_bonus",
+    "racecore:mountain_iron_middle_bonus",
+    "racecore:mountain_iron_small_bonus",
+    "racecore:mountain_diamond_small_bonus",
+    "racecore:mountain_diamond_large_bonus",
+    "racecore:mountain_diamond_buried_bonus",
+    "racecore:mountain_diamond_medium_bonus",
+    "racecore:mountain_emerald_bonus"
+  ],
+  "step": "underground_ores"
+}

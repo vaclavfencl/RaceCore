@@ -14,6 +14,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.ChunkPos;
@@ -23,6 +24,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.level.BlockDropsEvent;
 import net.neoforged.neoforge.event.level.ChunkEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
@@ -312,6 +314,29 @@ public final class MithrilEvents {
         seed ^= 0x4D49544852494C4CL;
 
         return seed;
+    }
+
+    /**
+     * Mithril is deliberately a post-Nether resource.
+     *
+     * Other tools may still physically break the block slowly, but only a
+     * Netherite Pickaxe is considered a valid harvesting tool and can produce
+     * drops.
+     */
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onMithrilHarvestCheck(
+            PlayerEvent.HarvestCheck event
+    ) {
+        if (!event.getTargetBlock()
+                .is(RaceCoreMaterials.MITHRIL_ORE.get())) {
+            return;
+        }
+
+        event.setCanHarvest(
+                event.getEntity()
+                        .getMainHandItem()
+                        .is(Items.NETHERITE_PICKAXE)
+        );
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)

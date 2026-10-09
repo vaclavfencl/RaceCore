@@ -2,6 +2,7 @@
   "replace": false,
   "values": [
     "racecore:steel_helmet",
-    "racecore:mithril_helmet"
+    "racecore:mithril_helmet",
+    "racecore:emerald_helmet"
   ]
 }

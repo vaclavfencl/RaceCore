@@ -7,6 +7,7 @@ import com.example.racecore.armor.ArmorWeight;
 import com.example.racecore.armor.ProtectionManager;
 import com.example.racecore.durability.BrokenItemManager;
 import com.example.racecore.enchanting.UtilityEnchantingManager;
+import com.example.racecore.material.EmeraldArmorLuckEvents;
 import com.example.racecore.movement.MovementRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponents;
@@ -138,6 +139,23 @@ public final class ArmorTooltipEvents {
                                 ChatFormatting.GRAY
                         )
         );
+
+        if (EmeraldArmorLuckEvents
+                .isEmeraldArmor(stack)) {
+
+            tooltip.add(
+                    Component.translatable(
+                                    "tooltip.racecore.armor.luck",
+                                    Component.literal("1")
+                                            .withStyle(
+                                                    ChatFormatting.GREEN
+                                            )
+                            )
+                            .withStyle(
+                                    ChatFormatting.GRAY
+                            )
+            );
+        }
 
         int protectionCapacity =
                 ProtectionManager

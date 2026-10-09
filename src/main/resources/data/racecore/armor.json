@@ -47,6 +47,22 @@
     "armor": 9.75,
     "weight": "MEDIUM"
   },
+  "racecore:emerald_helmet": {
+    "armor": 10.5,
+    "weight": "MEDIUM"
+  },
+  "racecore:emerald_chestplate": {
+    "armor": 28.0,
+    "weight": "MEDIUM"
+  },
+  "racecore:emerald_leggings": {
+    "armor": 21.0,
+    "weight": "MEDIUM"
+  },
+  "racecore:emerald_boots": {
+    "armor": 10.5,
+    "weight": "MEDIUM"
+  },
   "minecraft:golden_helmet": {
     "armor": 9.0,
     "weight": "HEAVY",

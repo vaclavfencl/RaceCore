@@ -28,11 +28,14 @@ import java.util.Map;
  * - armor uses the iron visual asset for now;
  * - weapon material sits between iron and diamond.
  *
+ * Emerald:
+ * - medium utility/economy armor;
+ * - +1 Luck per equipped piece is applied by EmeraldArmorLuckEvents;
+ * - uses the diamond visual asset as a placeholder.
+ *
  * Mithril:
  * - armor only; no Mithril weapon/tool tier is registered;
- * - armor uses the chainmail visual asset for now;
- * - Mithril Ore has no world generation here. Generation is intentionally
- *   left for the later world-generation/content phase.
+ * - armor uses the chainmail visual asset for now.
  */
 public final class RaceCoreMaterials {
     public static final DeferredRegister.Blocks BLOCKS =
@@ -43,6 +46,9 @@ public final class RaceCoreMaterials {
 
     public static final TagKey<Item> REPAIRS_STEEL =
             itemTag("repairs_steel");
+
+    public static final TagKey<Item> REPAIRS_EMERALD =
+            itemTag("repairs_emerald");
 
     public static final TagKey<Item> REPAIRS_MITHRIL =
             itemTag("repairs_mithril");
@@ -72,9 +78,27 @@ public final class RaceCoreMaterials {
                     12,
                     ArmorMaterials.IRON.equipSound(),
                     1.0F,
-                    0.0F,
+                    0.05F,
                     REPAIRS_STEEL,
                     ArmorMaterials.IRON.assetId()
+            );
+
+    /**
+     * Emerald armor is a medium-weight utility armor set.
+     *
+     * The RaceCore armor values are data-driven in armor.json. Diamond's
+     * equipment asset is reused only as a temporary visual placeholder.
+     */
+    public static final ArmorMaterial EMERALD_ARMOR_MATERIAL =
+            new ArmorMaterial(
+                    20,
+                    Map.copyOf(ArmorMaterials.CHAINMAIL.defense()),
+                    18,
+                    ArmorMaterials.CHAINMAIL.equipSound(),
+                    0.0F,
+                    0.0F,
+                    REPAIRS_EMERALD,
+                    ArmorMaterials.DIAMOND.assetId()
             );
 
     /**
@@ -183,6 +207,34 @@ public final class RaceCoreMaterials {
             registerArmor(
                     "steel_boots",
                     STEEL_ARMOR_MATERIAL,
+                    ArmorType.BOOTS
+            );
+
+    public static final DeferredItem<Item> EMERALD_HELMET =
+            registerArmor(
+                    "emerald_helmet",
+                    EMERALD_ARMOR_MATERIAL,
+                    ArmorType.HELMET
+            );
+
+    public static final DeferredItem<Item> EMERALD_CHESTPLATE =
+            registerArmor(
+                    "emerald_chestplate",
+                    EMERALD_ARMOR_MATERIAL,
+                    ArmorType.CHESTPLATE
+            );
+
+    public static final DeferredItem<Item> EMERALD_LEGGINGS =
+            registerArmor(
+                    "emerald_leggings",
+                    EMERALD_ARMOR_MATERIAL,
+                    ArmorType.LEGGINGS
+            );
+
+    public static final DeferredItem<Item> EMERALD_BOOTS =
+            registerArmor(
+                    "emerald_boots",
+                    EMERALD_ARMOR_MATERIAL,
                     ArmorType.BOOTS
             );
 

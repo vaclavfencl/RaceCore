@@ -113,6 +113,7 @@
   "tooltip.racecore.armor.movement": "Movement Speed: %s",
   "tooltip.racecore.armor.protection_cap": "Protection Cap: %s",
   "tooltip.racecore.armor.utility_cap": "Utility Cap: %s",
+  "tooltip.racecore.armor.luck": "Luck: +%s",
   "tooltip.racecore.weapon.effective_cap": "Effective Cap: %s",
   "tooltip.racecore.weapon.utility_cap": "Utility Cap: %s",
   "tooltip.racecore.weight.light": "Light",
@@ -187,5 +188,9 @@
   "item.racecore.steel_pickaxe": "Steel Pickaxe",
   "item.racecore.steel_axe": "Steel Axe",
   "item.racecore.steel_shovel": "Steel Shovel",
-  "item.racecore.steel_hoe": "Steel Hoe"
+  "item.racecore.steel_hoe": "Steel Hoe",
+  "item.racecore.emerald_helmet": "Emerald Helmet",
+  "item.racecore.emerald_chestplate": "Emerald Chestplate",
+  "item.racecore.emerald_leggings": "Emerald Leggings",
+  "item.racecore.emerald_boots": "Emerald Boots"
 }
