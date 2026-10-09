@@ -5,7 +5,7 @@
       {
         "model": {
           "type": "minecraft:model",
-          "model": "minecraft:item/diamond_spear"
+          "model": "racecore:item/diamond_glaive"
         },
         "when": [
           "gui",
