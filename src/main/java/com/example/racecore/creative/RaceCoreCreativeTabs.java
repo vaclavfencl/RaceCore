@@ -1,6 +1,7 @@
 package com.example.racecore.creative;
 
 import com.example.racecore.RaceCore;
+import com.example.racecore.material.RaceCoreMaterials;
 import com.example.racecore.weapon.RaceCoreWeapons;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -55,9 +56,23 @@ public final class RaceCoreCreativeTabs {
                                                         )
                                         )
                                         .displayItems(
-                                                RaceCoreWeapons
-                                                        .ITEMS
-                                                        .getEntries()
+                                                (parameters, output) -> {
+                                                    RaceCoreMaterials.ITEMS
+                                                            .getEntries()
+                                                            .forEach(
+                                                                    entry -> output.accept(
+                                                                            entry.get()
+                                                                    )
+                                                            );
+
+                                                    RaceCoreWeapons.ITEMS
+                                                            .getEntries()
+                                                            .forEach(
+                                                                    entry -> output.accept(
+                                                                            entry.get()
+                                                                    )
+                                                            );
+                                                }
                                         )
                                         .build()
                         )

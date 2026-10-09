@@ -4,6 +4,7 @@ import com.example.racecore.creative.RaceCoreCreativeTabs;
 import com.example.racecore.death.DeathAttachments;
 import com.example.racecore.death.DeathContent;
 import com.example.racecore.loot.LootLuckContent;
+import com.example.racecore.material.RaceCoreMaterials;
 import com.example.racecore.race.RaceAttachments;
 import com.example.racecore.race.RaceRegistry;
 import com.example.racecore.weapon.RaceCoreWeapons;
@@ -23,6 +24,7 @@ public final class RaceCore {
         DeathAttachments.ATTACHMENT_TYPES.register(modBus);
         DeathContent.register(modBus);
         LootLuckContent.register(modBus);
+        RaceCoreMaterials.register(modBus);
         RaceCoreWeapons.register(modBus);
         RaceCoreCreativeTabs.register(modBus);
         RaceRegistry.load();

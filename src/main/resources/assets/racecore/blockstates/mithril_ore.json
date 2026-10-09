@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "racecore:block/mithril_ore"
+    }
+  }
+}

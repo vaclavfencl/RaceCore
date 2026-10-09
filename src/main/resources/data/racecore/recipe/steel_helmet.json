@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": "racecore:steel_ingot"
+  },
+  "pattern": [
+    "III",
+    "I I"
+  ],
+  "result": {
+    "id": "racecore:steel_helmet"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "racecore:steel_ingot",
+    "racecore:steel_ingot",
+    "minecraft:stick",
+    "minecraft:stick"
+  ],
+  "result": {
+    "id": "racecore:steel_glaive"
+  }
+}

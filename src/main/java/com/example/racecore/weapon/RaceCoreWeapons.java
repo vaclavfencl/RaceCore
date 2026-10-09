@@ -1,6 +1,7 @@
 package com.example.racecore.weapon;
 
 import com.example.racecore.RaceCore;
+import com.example.racecore.material.RaceCoreMaterials;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -34,6 +35,8 @@ public final class RaceCoreWeapons {
             registerWeapon("copper_dagger", ToolMaterial.COPPER, 1.25F, -1.80F, 0.0);
     public static final DeferredItem<Item> DAGGER =
             registerWeapon("dagger", ToolMaterial.IRON, 1.25F, -1.80F, 0.0);
+    public static final DeferredItem<Item> STEEL_DAGGER =
+            registerWeapon("steel_dagger", RaceCoreMaterials.STEEL_TOOL_MATERIAL, 1.25F, -1.80F, 0.0);
     public static final DeferredItem<Item> GOLDEN_DAGGER =
             registerWeapon("golden_dagger", ToolMaterial.GOLD, 1.25F, -1.80F, 0.0);
     public static final DeferredItem<Item> DIAMOND_DAGGER =
@@ -47,6 +50,8 @@ public final class RaceCoreWeapons {
             registerWeapon("copper_glaive", ToolMaterial.COPPER, 3.0F, -2.65F, 1.25);
     public static final DeferredItem<Item> GLAIVE =
             registerWeapon("glaive", ToolMaterial.IRON, 3.0F, -2.65F, 1.25);
+    public static final DeferredItem<Item> STEEL_GLAIVE =
+            registerWeapon("steel_glaive", RaceCoreMaterials.STEEL_TOOL_MATERIAL, 3.0F, -2.65F, 1.25);
     public static final DeferredItem<Item> GOLDEN_GLAIVE =
             registerWeapon("golden_glaive", ToolMaterial.GOLD, 3.0F, -2.65F, 1.25);
     public static final DeferredItem<Item> DIAMOND_GLAIVE =
@@ -60,6 +65,8 @@ public final class RaceCoreWeapons {
             registerWeapon("copper_longsword", ToolMaterial.COPPER, 4.0F, -2.65F, 0.25);
     public static final DeferredItem<Item> LONGSWORD =
             registerWeapon("longsword", ToolMaterial.IRON, 4.0F, -2.65F, 0.25);
+    public static final DeferredItem<Item> STEEL_LONGSWORD =
+            registerWeapon("steel_longsword", RaceCoreMaterials.STEEL_TOOL_MATERIAL, 4.0F, -2.65F, 0.25);
     public static final DeferredItem<Item> GOLDEN_LONGSWORD =
             registerWeapon("golden_longsword", ToolMaterial.GOLD, 4.0F, -2.65F, 0.25);
     public static final DeferredItem<Item> DIAMOND_LONGSWORD =
@@ -157,6 +164,7 @@ public final class RaceCoreWeapons {
                 STONE_DAGGER,
                 COPPER_DAGGER,
                 DAGGER,
+                STEEL_DAGGER,
                 GOLDEN_DAGGER,
                 DIAMOND_DAGGER,
                 NETHERITE_DAGGER
@@ -169,6 +177,7 @@ public final class RaceCoreWeapons {
                 STONE_GLAIVE,
                 COPPER_GLAIVE,
                 GLAIVE,
+                STEEL_GLAIVE,
                 GOLDEN_GLAIVE,
                 DIAMOND_GLAIVE,
                 NETHERITE_GLAIVE
@@ -181,6 +190,7 @@ public final class RaceCoreWeapons {
                 STONE_LONGSWORD,
                 COPPER_LONGSWORD,
                 LONGSWORD,
+                STEEL_LONGSWORD,
                 GOLDEN_LONGSWORD,
                 DIAMOND_LONGSWORD,
                 NETHERITE_LONGSWORD
@@ -225,5 +235,4 @@ public final class RaceCoreWeapons {
 
         return false;
     }
-
 }

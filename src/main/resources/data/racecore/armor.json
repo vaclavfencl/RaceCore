@@ -83,6 +83,22 @@
     "armor": 12.0,
     "weight": "HEAVY"
   },
+  "racecore:steel_helmet": {
+    "armor": 15.0,
+    "weight": "HEAVY"
+  },
+  "racecore:steel_chestplate": {
+    "armor": 40.0,
+    "weight": "HEAVY"
+  },
+  "racecore:steel_leggings": {
+    "armor": 30.0,
+    "weight": "HEAVY"
+  },
+  "racecore:steel_boots": {
+    "armor": 15.0,
+    "weight": "HEAVY"
+  },
   "minecraft:diamond_helmet": {
     "armor": 18.0,
     "weight": "MEDIUM"
@@ -98,6 +114,22 @@
   "minecraft:diamond_boots": {
     "armor": 18.0,
     "weight": "MEDIUM"
+  },
+  "racecore:mithril_helmet": {
+    "armor": 15.0,
+    "weight": "LIGHT"
+  },
+  "racecore:mithril_chestplate": {
+    "armor": 40.0,
+    "weight": "LIGHT"
+  },
+  "racecore:mithril_leggings": {
+    "armor": 30.0,
+    "weight": "LIGHT"
+  },
+  "racecore:mithril_boots": {
+    "armor": 15.0,
+    "weight": "LIGHT"
   },
   "minecraft:netherite_helmet": {
     "armor": 30.0,

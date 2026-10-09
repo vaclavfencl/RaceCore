@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:smelting",
+  "cookingtime": 400,
+  "experience": 2.0,
+  "ingredient": "racecore:mithril_ore",
+  "result": {
+    "id": "racecore:mithril_ingot"
+  }
+}
