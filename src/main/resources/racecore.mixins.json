@@ -4,7 +4,14 @@
   "package": "com.example.racecore.mixin",
   "mixins": [
     "BundleContentsMutableMixin",
-    "BundleItemMixin"
+    "BundleItemMixin",
+    "MobEffectInstanceAccessor",
+    "MobEffectAttributeTemplateMixin",
+    "PoisonMobEffectMixin",
+    "WitherMobEffectMixin",
+    "RegenerationMobEffectMixin",
+    "HealOrHarmMobEffectMixin",
+    "PlayerPotionMiningMixin"
   ],
   "client": [
     "client.ClientBundleTooltipMixin"
