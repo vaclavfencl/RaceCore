@@ -1,5 +1,6 @@
 package com.example.racecore.world.encounter;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.Holder;
@@ -8,13 +9,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.biome.Biome;
 
-/**
- * Immutable, data-driven mob pool.
- *
- * A pool has normal entries plus optional exact-biome overrides. The override
- * replaces the default list for that biome, which lets the day pool preserve
- * the old desert Husk ratios without putting desert logic in Java.
- */
 public final class EncounterPool {
     private final String id;
     private final List<EncounterPoolEntry> entries;
@@ -34,14 +28,44 @@ public final class EncounterPool {
         return id;
     }
 
+    /**
+     * Standard existing systems use this picker.
+     * huntEligible=false entries are deliberately hidden from it, so special
+     * ambient mobs can never become hunt mobs.
+     */
     public EncounterPoolEntry pick(
             ServerLevel level,
             net.minecraft.core.BlockPos pos,
             RandomSource random
     ) {
-        List<EncounterPoolEntry> candidates = entriesFor(level, pos);
+        List<EncounterPoolEntry> candidates = new ArrayList<>();
 
+        for (EncounterPoolEntry entry : entriesFor(level, pos)) {
+            if (entry.huntEligible()) {
+                candidates.add(entry);
+            }
+        }
+
+        return pickWeighted(candidates, random);
+    }
+
+    /**
+     * Full weighted pool used only by RarePoolSpawnEvents.
+     */
+    public EncounterPoolEntry pickIncludingSpecial(
+            ServerLevel level,
+            net.minecraft.core.BlockPos pos,
+            RandomSource random
+    ) {
+        return pickWeighted(entriesFor(level, pos), random);
+    }
+
+    private static EncounterPoolEntry pickWeighted(
+            List<EncounterPoolEntry> candidates,
+            RandomSource random
+    ) {
         int totalWeight = 0;
+
         for (EncounterPoolEntry entry : candidates) {
             totalWeight += entry.weight();
         }
@@ -59,7 +83,7 @@ public final class EncounterPool {
             }
         }
 
-        return candidates.getLast();
+        return candidates.isEmpty() ? null : candidates.getLast();
     }
 
     private List<EncounterPoolEntry> entriesFor(

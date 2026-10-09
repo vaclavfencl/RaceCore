@@ -14,12 +14,6 @@ import java.util.ArrayList;
 import java.util.Map;
 import net.minecraft.resources.Identifier;
 
-/**
- * Loads the shared world-encounter pools from JSON.
- *
- * Phase 12.5 initially ships "day" and "night". Future dungeons/bosses can
- * use the exact same format and loader instead of hardcoding mob lists.
- */
 public final class EncounterPoolRegistry {
     public static final String DAY = "day";
     public static final String NIGHT = "night";
@@ -44,6 +38,18 @@ public final class EncounterPoolRegistry {
     ) {
         EncounterPool pool = get(id);
         return pool == null ? null : pool.pick(level, pos, random);
+    }
+
+    public static EncounterPoolEntry pickIncludingSpecial(
+            String id,
+            net.minecraft.server.level.ServerLevel level,
+            net.minecraft.core.BlockPos pos,
+            net.minecraft.util.RandomSource random
+    ) {
+        EncounterPool pool = get(id);
+        return pool == null
+                ? null
+                : pool.pickIncludingSpecial(level, pos, random);
     }
 
     private static synchronized void ensureLoaded() {
@@ -160,6 +166,13 @@ public final class EncounterPoolRegistry {
             int min = object.has("min") ? object.get("min").getAsInt() : 1;
             int max = object.has("max") ? object.get("max").getAsInt() : min;
 
+            boolean huntEligible = !object.has("huntEligible")
+                    || object.get("huntEligible").getAsBoolean();
+
+            int maxPerEncounter = object.has("maxPerEncounter")
+                    ? object.get("maxPerEncounter").getAsInt()
+                    : Integer.MAX_VALUE;
+
             if (min < 1 || max < min) {
                 throw new IllegalStateException(
                         "Encounter pool '" + poolId + "' entry '"
@@ -168,7 +181,24 @@ public final class EncounterPoolRegistry {
                 );
             }
 
-            result.add(new EncounterPoolEntry(entityId, weight, min, max));
+            if (maxPerEncounter < 1) {
+                throw new IllegalStateException(
+                        "Encounter pool '" + poolId + "' entry '"
+                                + entityId + "' has invalid maxPerEncounter: "
+                                + maxPerEncounter
+                );
+            }
+
+            result.add(
+                    new EncounterPoolEntry(
+                            entityId,
+                            weight,
+                            min,
+                            max,
+                            huntEligible,
+                            maxPerEncounter
+                    )
+            );
         }
 
         return List.copyOf(result);
