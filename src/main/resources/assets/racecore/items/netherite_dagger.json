@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "minecraft:item/netherite_sword"
+    "model": "racecore:item/netherite_dagger"
   }
 }
