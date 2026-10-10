@@ -10,9 +10,11 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
 /**
  * Generic RaceCore ranged-trajectory abilities.
@@ -23,6 +25,11 @@ import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
  */
 @EventBusSubscriber(modid = RaceCore.MODID)
 public final class RaceProjectileEvents {
+    private static final String NO_FALLOFF_KEY =
+            "racecore:no_falloff_arrow";
+
+    private static final double NO_FALLOFF_CEILING_Y = 500.0;
+
     private static final TagKey<Item> BOWS =
             TagKey.create(
                     Registries.ITEM,
@@ -85,6 +92,24 @@ public final class RaceProjectileEvents {
              * physics still behave sensibly.
              */
             arrow.setNoGravity(true);
+            arrow.getPersistentData().putBoolean(NO_FALLOFF_KEY, true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onArrowTick(EntityTickEvent.Post event) {
+        if (!(event.getEntity() instanceof AbstractArrow arrow)
+                || arrow.level().isClientSide()
+                || !arrow.isNoGravity()
+                || arrow.getY() < NO_FALLOFF_CEILING_Y
+                || !arrow.getPersistentData().getBooleanOr(NO_FALLOFF_KEY, false)) {
+            return;
+        }
+
+        Vec3 movement = arrow.getDeltaMovement();
+        if (movement.y > 0.0) {
+            arrow.setDeltaMovement(movement.x, -movement.y, movement.z);
+            arrow.syncVelocity = true;
         }
     }
 }
