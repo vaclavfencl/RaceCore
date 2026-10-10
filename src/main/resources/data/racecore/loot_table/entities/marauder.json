@@ -1,4 +1,18 @@
 {
   "type": "minecraft:entity",
-  "pools": []
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "racecore:steel_ingot",
+          "condition": {
+            "type": "minecraft:random_chance",
+            "chance": 0.25
+          }
+        }
+      ]
+    }
+  ]
 }

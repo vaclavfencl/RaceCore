@@ -2,6 +2,7 @@ package com.example.racecore.movement;
 
 import com.example.racecore.RaceCore;
 import com.example.racecore.race.RaceDefinition;
+import com.example.racecore.race.RaceManager;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
@@ -10,6 +11,7 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.neoforged.neoforge.common.NeoForgeMod;
 
 /**
  * Central RaceCore movement-speed system.
@@ -42,6 +44,12 @@ public final class MovementManager {
                     "race_movement_speed"
             );
 
+    private static final Identifier RACE_SWIM_SPEED_ID =
+            Identifier.fromNamespaceAndPath(
+                    RaceCore.MODID,
+                    "race_swim_speed"
+            );
+
     private static final Identifier ARMOR_MOVEMENT_ID =
             Identifier.fromNamespaceAndPath(
                     RaceCore.MODID,
@@ -53,6 +61,14 @@ public final class MovementManager {
                     RaceCore.MODID,
                     "armor_flying_speed"
             );
+
+    /**
+     * Giant already has 1.20 race movement and RaceCore applies the global
+     * 1.07 movement layer. A further ~1.11 underwater multiplier puts normal
+     * Giant swimming around vanilla boat travel speed without turning it into
+     * Dolphin's-Grace-style water flight.
+     */
+    public static final double GIANT_SWIM_SPEED_MULTIPLIER = 1.11;
 
     private MovementManager() {
     }
@@ -111,6 +127,18 @@ public final class MovementManager {
                 Attributes.MOVEMENT_SPEED,
                 RACE_MOVEMENT_ID,
                 race.movementSpeedMultiplier()
+        );
+
+        double swimMultiplier =
+                "giant".equals(RaceManager.getRaceId(player))
+                        ? GIANT_SWIM_SPEED_MULTIPLIER
+                        : 1.0;
+
+        applyMultiplierIfPresent(
+                player,
+                NeoForgeMod.SWIM_SPEED,
+                RACE_SWIM_SPEED_ID,
+                swimMultiplier
         );
     }
 
@@ -198,6 +226,12 @@ public final class MovementManager {
                     entity,
                     Attributes.MOVEMENT_SPEED,
                     RACE_MOVEMENT_ID
+            );
+
+            removeIfPresent(
+                    entity,
+                    NeoForgeMod.SWIM_SPEED,
+                    RACE_SWIM_SPEED_ID
             );
         }
     }

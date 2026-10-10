@@ -74,6 +74,8 @@ public final class HuntEncounterEvents {
 
     private static final int MAX_GROUP_SEARCH_ATTEMPTS = 24;
     private static final int MAX_MEMBER_SEARCH_ATTEMPTS = 12;
+    private static final int BASE_HUNT_MIN_SIZE = 3;
+    private static final int BASE_HUNT_MAX_SIZE = 6;
     private static final int EXTRA_HUNTERS_PER_ADDITIONAL_PLAYER = 1;
     private static final int MAX_EXTRA_HUNTERS = 4;
 
@@ -281,23 +283,59 @@ public final class HuntEncounterEvents {
                 ? EncounterPoolRegistry.HUNT_DAY
                 : EncounterPoolRegistry.HUNT_NIGHT;
 
-        EncounterPoolEntry entry = EncounterPoolRegistry.pick(
-                poolId,
-                level,
-                center,
-                random
+        /*
+         * Hunt size belongs to the encounter, not to one mob entry. The old
+         * implementation first picked one entry and then cloned that entry
+         * three-to-six times, which is exactly what made hunts homogeneous.
+         */
+        int requested = randomBetweenInt(
+                random,
+                BASE_HUNT_MIN_SIZE,
+                BASE_HUNT_MAX_SIZE
         );
-
-        if (entry == null) {
-            return false;
-        }
-
-        int requested = randomBetweenInt(random, entry.min(), entry.max());
         requested += Math.min(
                 MAX_EXTRA_HUNTERS,
                 Math.max(0, playerGroup.size() - 1)
                         * EXTRA_HUNTERS_PER_ADDITIONAL_PLAYER
         );
+
+        /*
+         * Build a mixed roster. The first two members are forced to be
+         * different when possible; after that, normal pool weights apply.
+         * Eligibility is evaluated at the target's
+         * biome when the hunt begins, so river/mountain-only hunters cannot
+         * leak into a nearby biome merely because the spawn ring crosses it.
+         * Strong/special entries can additionally use maxPerEncounter in JSON.
+         */
+        List<EncounterPoolEntry> roster = new ArrayList<>();
+        Map<net.minecraft.resources.Identifier, Integer> plannedCounts =
+                new HashMap<>();
+        Set<net.minecraft.resources.Identifier> usedThisCycle =
+                new HashSet<>();
+
+        for (int i = 0; i < requested; i++) {
+            EncounterPoolEntry member =
+                    EncounterPoolRegistry.pickMixedHuntMember(
+                            poolId,
+                            level,
+                            target.blockPosition(),
+                            random,
+                            plannedCounts,
+                            usedThisCycle
+                    );
+
+            if (member == null) {
+                break;
+            }
+
+            usedThisCycle.add(member.entityId());
+            plannedCounts.merge(member.entityId(), 1, Integer::sum);
+            roster.add(member);
+        }
+
+        if (roster.isEmpty()) {
+            return false;
+        }
 
         PlayerHuntEncounter encounter = new PlayerHuntEncounter(
                 level,
@@ -307,7 +345,7 @@ public final class HuntEncounterEvents {
 
         int spawned = 0;
 
-        for (int i = 0; i < requested; i++) {
+        for (EncounterPoolEntry entry : roster) {
             Mob mob = trySpawnHunter(
                     level,
                     playerGroup,
@@ -324,7 +362,7 @@ public final class HuntEncounterEvents {
             }
         }
 
-        int minimumRequired = Math.min(2, requested);
+        int minimumRequired = Math.min(2, roster.size());
         if (spawned < minimumRequired) {
             encounter.finish(true);
             return false;

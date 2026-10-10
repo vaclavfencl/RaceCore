@@ -54,6 +54,32 @@ public final class EncounterPoolRegistry {
                 : pool.pickIncludingSpecial(level, pos, random);
     }
 
+    /**
+     * Picks one member for a mixed hunt. Entries that already reached their
+     * maxPerEncounter cap are excluded. The picker guarantees two different
+     * mob types when the pool has enough eligible entries, then returns to the
+     * normal weights for the remaining Hunt members.
+     */
+    public static EncounterPoolEntry pickMixedHuntMember(
+            String id,
+            net.minecraft.server.level.ServerLevel level,
+            net.minecraft.core.BlockPos pos,
+            net.minecraft.util.RandomSource random,
+            Map<Identifier, Integer> currentCounts,
+            java.util.Set<Identifier> usedThisCycle
+    ) {
+        EncounterPool pool = get(id);
+        return pool == null
+                ? null
+                : pool.pickMixedHuntMember(
+                        level,
+                        pos,
+                        random,
+                        currentCounts,
+                        usedThisCycle
+                );
+    }
+
     private static synchronized void ensureLoaded() {
         if (loaded) {
             return;
@@ -177,6 +203,22 @@ public final class EncounterPoolRegistry {
                     ? object.get("maxPerEncounter").getAsInt()
                     : Integer.MAX_VALUE;
 
+            Identifier biomeTag = null;
+            if (object.has("biomeTag")) {
+                String biomeTagText = object.get("biomeTag")
+                        .getAsString()
+                        .trim();
+
+                biomeTag = Identifier.tryParse(biomeTagText);
+                if (biomeTag == null) {
+                    throw new IllegalStateException(
+                            "Encounter pool '" + poolId + "' entry '"
+                                    + entityId + "' has invalid biomeTag: "
+                                    + biomeTagText
+                    );
+                }
+            }
+
             if (min < 1 || max < min) {
                 throw new IllegalStateException(
                         "Encounter pool '" + poolId + "' entry '"
@@ -200,7 +242,8 @@ public final class EncounterPoolRegistry {
                             min,
                             max,
                             huntEligible,
-                            maxPerEncounter
+                            maxPerEncounter,
+                            biomeTag
                     )
             );
         }

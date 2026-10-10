@@ -12,6 +12,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingEquipmentChangeEvent;
@@ -103,6 +104,20 @@ public final class RaceEquipmentRestrictionEvents {
             return null;
         }
 
+        /*
+         * Giant progression is intentionally front-loaded. Giants do not get
+         * access to every LIGHT armor set (most importantly Mithril); they may
+         * wear only the four vanilla Leather armor pieces.
+         */
+        if ("giant".equals(RaceManager.getRaceId(player))
+                && !isLeatherArmor(stack)) {
+
+            return Component.translatable(
+                    "message.racecore.equipment.weight_blocked",
+                    Component.literal("non-leather")
+            );
+        }
+
         if (UtilityEnchantingManager
                 .isOverCapacity(
                         player,
@@ -155,5 +170,14 @@ public final class RaceEquipmentRestrictionEvents {
                         }
                 )
         );
+    }
+
+    private static boolean isLeatherArmor(
+            ItemStack stack
+    ) {
+        return stack.is(Items.LEATHER_HELMET)
+                || stack.is(Items.LEATHER_CHESTPLATE)
+                || stack.is(Items.LEATHER_LEGGINGS)
+                || stack.is(Items.LEATHER_BOOTS);
     }
 }

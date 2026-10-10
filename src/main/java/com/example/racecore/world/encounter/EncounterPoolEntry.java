@@ -11,7 +11,8 @@ public record EncounterPoolEntry(
         int min,
         int max,
         boolean huntEligible,
-        int maxPerEncounter
+        int maxPerEncounter,
+        Identifier biomeTag
 ) {
     public Optional<EntityType<?>> resolveEntityType() {
         return BuiltInRegistries.ENTITY_TYPE.getOptional(entityId);

@@ -40,7 +40,9 @@
       "entity": "racecore:river_drake",
       "weight": 8,
       "min": 1,
-      "max": 2
+      "max": 2,
+      "maxPerEncounter": 1,
+      "biomeTag": "c:is_river"
     },
     {
       "entity": "racecore:marauder",
@@ -52,7 +54,9 @@
       "entity": "racecore:stone_sentinel",
       "weight": 4,
       "min": 1,
-      "max": 2
+      "max": 2,
+      "maxPerEncounter": 1,
+      "biomeTag": "c:is_mountain"
     }
   ]
 }

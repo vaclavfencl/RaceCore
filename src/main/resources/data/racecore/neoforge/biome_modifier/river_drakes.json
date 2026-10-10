@@ -1,0 +1,13 @@
+{
+  "type": "neoforge:add_spawns",
+  "biomes": "#c:is_river",
+  "spawners": {
+    "type": "racecore:river_drake",
+    "count": {
+      "type": "minecraft:uniform",
+      "max_inclusive": 1,
+      "min_inclusive": 1
+    },
+    "weight": 8
+  }
+}

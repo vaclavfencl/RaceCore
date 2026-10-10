@@ -7,12 +7,17 @@ import com.example.racecore.mob.entity.MarauderEntity;
 import com.example.racecore.mob.entity.RiverDrakeEntity;
 import com.example.racecore.mob.entity.RockProjectileEntity;
 import com.example.racecore.mob.entity.StoneSentinelEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.SpawnPlacementTypes;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
+import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -91,6 +96,45 @@ public final class RaceCoreMobs {
 
     public static void register(IEventBus modBus) {
         ENTITY_TYPES.register(modBus);
+    }
+
+
+    @SubscribeEvent
+    public static void onRegisterSpawnPlacements(
+            RegisterSpawnPlacementsEvent event
+    ) {
+        /*
+         * River Drakes are true river wildlife. They naturally enter the world
+         * in water inside biomes selected by the c:is_river biome modifier.
+         */
+        event.register(
+                RIVER_DRAKE.get(),
+                SpawnPlacementTypes.IN_WATER,
+                Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                (type, level, spawnReason, pos, random) ->
+                        level.getFluidState(pos).is(FluidTags.WATER),
+                RegisterSpawnPlacementsEvent.Operation.REPLACE
+        );
+
+        /*
+         * Stone Sentinels naturally appear only in mountain biomes selected by
+         * the c:is_mountain biome modifier. They ignore vanilla monster light
+         * rules; the normal obstruction/collision checks still run afterwards.
+         */
+        event.register(
+                STONE_SENTINEL.get(),
+                SpawnPlacementTypes.ON_GROUND,
+                Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                (type, level, spawnReason, pos, random) ->
+                        level.getFluidState(pos).isEmpty()
+                                && level.getBlockState(pos.below())
+                                .isFaceSturdy(
+                                        level,
+                                        pos.below(),
+                                        Direction.UP
+                                ),
+                RegisterSpawnPlacementsEvent.Operation.REPLACE
+        );
     }
 
     @SubscribeEvent

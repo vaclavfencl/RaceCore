@@ -1,6 +1,7 @@
 package com.example.racecore.mob.entity;
 
 import com.example.racecore.mob.ai.AdaptiveMeleeAttackGoal;
+import com.example.racecore.world.encounter.PlayerHuntEncounter;
 import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
@@ -18,7 +19,9 @@ import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.animal.wolf.Wolf;
+import net.minecraft.world.entity.monster.spider.Spider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
@@ -111,6 +114,34 @@ public final class RiverDrakeEntity extends Wolf {
         this.targetSelector.addGoal(
                 1,
                 new HurtByTargetGoal(this)
+        );
+
+        /*
+         * Neutral ecology: ordinary River Drakes proactively hunt Spiders
+         * (Cave Spiders inherit Spider as well). During a player Hunt this goal
+         * is disabled so the encounter target always stays the priority.
+         */
+        this.targetSelector.addGoal(
+                2,
+                new NearestAttackableTargetGoal<>(
+                        this,
+                        Spider.class,
+                        true
+                ) {
+                    @Override
+                    public boolean canUse() {
+                        return !RiverDrakeEntity.this.entityTags()
+                                .contains(PlayerHuntEncounter.HUNT_MEMBER_TAG)
+                                && super.canUse();
+                    }
+
+                    @Override
+                    public boolean canContinueToUse() {
+                        return !RiverDrakeEntity.this.entityTags()
+                                .contains(PlayerHuntEncounter.HUNT_MEMBER_TAG)
+                                && super.canContinueToUse();
+                    }
+                }
         );
     }
 
