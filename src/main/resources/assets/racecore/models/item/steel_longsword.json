@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "racecore:item/longsword"
+    "layer0": "racecore:item/steel_longsword"
   }
 }
