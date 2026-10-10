@@ -1,0 +1,86 @@
+{
+  "entries": [
+    {
+      "entity": "minecraft:spider",
+      "weight": 45,
+      "min": 3,
+      "max": 6
+    },
+    {
+      "entity": "minecraft:creeper",
+      "weight": 25,
+      "min": 2,
+      "max": 4
+    },
+    {
+      "entity": "minecraft:witch",
+      "weight": 8,
+      "min": 2,
+      "max": 3
+    },
+    {
+      "entity": "racecore:river_drake",
+      "weight": 10,
+      "min": 1,
+      "max": 2
+    },
+    {
+      "entity": "racecore:marauder",
+      "weight": 10,
+      "min": 2,
+      "max": 4
+    },
+    {
+      "entity": "racecore:stone_sentinel",
+      "weight": 5,
+      "min": 1,
+      "max": 2
+    }
+  ],
+  "biomeOverrides": {
+    "minecraft:desert": [
+      {
+        "entity": "minecraft:husk",
+        "weight": 38,
+        "min": 3,
+        "max": 6
+      },
+      {
+        "entity": "minecraft:spider",
+        "weight": 25,
+        "min": 3,
+        "max": 6
+      },
+      {
+        "entity": "minecraft:creeper",
+        "weight": 17,
+        "min": 2,
+        "max": 4
+      },
+      {
+        "entity": "minecraft:witch",
+        "weight": 5,
+        "min": 2,
+        "max": 3
+      },
+      {
+        "entity": "racecore:river_drake",
+        "weight": 5,
+        "min": 1,
+        "max": 2
+      },
+      {
+        "entity": "racecore:marauder",
+        "weight": 10,
+        "min": 2,
+        "max": 4
+      },
+      {
+        "entity": "racecore:stone_sentinel",
+        "weight": 5,
+        "min": 1,
+        "max": 2
+      }
+    ]
+  }
+}

@@ -43,6 +43,28 @@ public final class EncounterManager {
         return false;
     }
 
+    /**
+     * Adds a mob summoned by an existing encounter participant to that same
+     * encounter. This is used by Stone Sentinels so lesser summons are cleaned
+     * up together with a Hunt instead of being left behind.
+     */
+    public static synchronized boolean addSummonedParticipant(
+            net.minecraft.world.entity.Entity parent,
+            net.minecraft.world.entity.Entity child
+    ) {
+        UUID parentId = parent.getUUID();
+
+        for (Encounter encounter : ACTIVE.values()) {
+            if (!encounter.isFinished()
+                    && encounter.participants().contains(parentId)) {
+                encounter.addParticipant(child);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static String encounterTag(UUID encounterId) {
         return ENCOUNTER_ID_TAG_PREFIX + encounterId;
     }

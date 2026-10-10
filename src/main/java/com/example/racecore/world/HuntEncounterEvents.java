@@ -38,8 +38,12 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
  *
  * Hunts are independent from Phase 12.2's ordinary daytime hostile packs.
  * They can begin during either day or night:
- * - day uses encounter_pools/day.json;
- * - night uses encounter_pools/night.json.
+ * - day uses encounter_pools/hunt_day.json;
+ * - night uses encounter_pools/hunt_night.json.
+ *
+ * Hunt pools are intentionally separate from the ordinary day/night surface
+ * encounter pools. This lets RaceCore add hunt-only mobs without also making
+ * them appear in ordinary daytime packs or changing rare-pool odds.
  *
  * The scheduler aims for roughly one or two hunt attempts per full Minecraft
  * day/night cycle for a nearby player group. Once spawned, PlayerHuntEncounter
@@ -274,8 +278,8 @@ public final class HuntEncounterEvents {
         }
 
         String poolId = isDaytime(server)
-                ? EncounterPoolRegistry.DAY
-                : EncounterPoolRegistry.NIGHT;
+                ? EncounterPoolRegistry.HUNT_DAY
+                : EncounterPoolRegistry.HUNT_NIGHT;
 
         EncounterPoolEntry entry = EncounterPoolRegistry.pick(
                 poolId,
@@ -320,7 +324,8 @@ public final class HuntEncounterEvents {
             }
         }
 
-        if (spawned < 2) {
+        int minimumRequired = Math.min(2, requested);
+        if (spawned < minimumRequired) {
             encounter.finish(true);
             return false;
         }

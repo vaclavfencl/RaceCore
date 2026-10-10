@@ -17,6 +17,8 @@ import net.minecraft.resources.Identifier;
 public final class EncounterPoolRegistry {
     public static final String DAY = "day";
     public static final String NIGHT = "night";
+    public static final String HUNT_DAY = "hunt_day";
+    public static final String HUNT_NIGHT = "hunt_night";
 
     private static final Gson GSON = new Gson();
     private static final Map<String, EncounterPool> POOLS = new LinkedHashMap<>();
@@ -60,6 +62,8 @@ public final class EncounterPoolRegistry {
         Map<String, EncounterPool> parsed = new LinkedHashMap<>();
         parsed.put(DAY, loadPool(DAY));
         parsed.put(NIGHT, loadPool(NIGHT));
+        parsed.put(HUNT_DAY, loadPool(HUNT_DAY));
+        parsed.put(HUNT_NIGHT, loadPool(HUNT_NIGHT));
 
         POOLS.clear();
         POOLS.putAll(parsed);

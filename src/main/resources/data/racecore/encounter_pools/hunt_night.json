@@ -1,0 +1,58 @@
+{
+  "entries": [
+    {
+      "entity": "minecraft:zombie",
+      "weight": 24,
+      "min": 3,
+      "max": 6
+    },
+    {
+      "entity": "minecraft:skeleton",
+      "weight": 20,
+      "min": 3,
+      "max": 6
+    },
+    {
+      "entity": "minecraft:spider",
+      "weight": 16,
+      "min": 3,
+      "max": 6
+    },
+    {
+      "entity": "minecraft:creeper",
+      "weight": 12,
+      "min": 2,
+      "max": 4
+    },
+    {
+      "entity": "minecraft:witch",
+      "weight": 4,
+      "min": 2,
+      "max": 3
+    },
+    {
+      "entity": "minecraft:enderman",
+      "weight": 4,
+      "min": 2,
+      "max": 3
+    },
+    {
+      "entity": "racecore:river_drake",
+      "weight": 8,
+      "min": 1,
+      "max": 2
+    },
+    {
+      "entity": "racecore:marauder",
+      "weight": 8,
+      "min": 2,
+      "max": 4
+    },
+    {
+      "entity": "racecore:stone_sentinel",
+      "weight": 4,
+      "min": 1,
+      "max": 2
+    }
+  ]
+}
