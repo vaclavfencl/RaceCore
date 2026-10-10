@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
@@ -20,14 +21,17 @@ import net.minecraft.world.entity.monster.Phantom;
 import net.minecraft.world.entity.projectile.hurtingprojectile.DragonFireball;
 import net.minecraft.world.entity.projectile.hurtingprojectile.LargeFireball;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
@@ -295,9 +299,25 @@ public final class EnderDragonBattleEvents {
     }
 
     private static void fireReflectable(ServerLevel level, EnderDragon dragon, ServerPlayer player) {
-        Vec3 from = dragon.position().add(0.0, 2.0, 0.0);
-        Vec3 dir = player.position().add(0, 1.0, 0).subtract(from).normalize();
-        LargeFireball ball = new LargeFireball(level, dragon, dir, 1);
+        // The dragon is very large and often hovers close to obsidian towers.
+        // Spawning a fireball at its body center made shots collide with a pillar
+        // immediately and sometimes damage the dragon itself.
+        Vec3 muzzle = dragon.position().add(0.0, 4.5, 0.0);
+        Vec3 targetPos = player.getEyePosition();
+        Vec3 towardPlayer = targetPos.subtract(muzzle);
+        if (towardPlayer.lengthSqr() < 1.0) return;
+        Vec3 direction = towardPlayer.normalize();
+        Vec3 from = muzzle.add(direction.scale(9.0));
+        Vec3 newDirection = targetPos.subtract(from);
+        if (newDirection.lengthSqr() < 1.0) return;
+        newDirection = newDirection.normalize();
+
+        // Do not launch at players who are behind towers or through obsidian.
+        // Try again on the next shot interval rather than explode on the pillar.
+        if (level.clip(new ClipContext(from, targetPos, ClipContext.Block.COLLIDER,
+                ClipContext.Fluid.NONE, dragon)).getType() != HitResult.Type.MISS) return;
+
+        LargeFireball ball = new LargeFireball(level, dragon, newDirection, 1);
         ball.setPos(from);
         ball.addTag(BALL_TAG);
         level.addFreshEntity(ball);
@@ -315,16 +335,18 @@ public final class EnderDragonBattleEvents {
             Vec3 towardsDragon = dragon.position().add(0, 2, 0).subtract(ball.position());
             if (towardsDragon.lengthSqr() > 11.0 * 11.0) continue;
             if (ball.getDeltaMovement().dot(towardsDragon) <= 0.25) continue;
+            // Direction alone is not proof of a return shot. A projectile that
+            // flies around a pillar can briefly point toward the dragon.
+            // Minecraft changes a Ghast fireball's owner on player deflection.
+            if (!(ball.getOwner() instanceof ServerPlayer reflectingPlayer)) continue;
             Battle battle = BATTLES.get(dragon.getUUID());
             if (battle == null || battle.stage != Stage.FINAL) continue;
-            ServerPlayer player = target(level, dragon);
-            if (player != null) {
-                dragon.hurtServer(level, level.damageSources().playerAttack(player), REFLECT_DAMAGE);
-                ball.discard();
-                battle.move = Move.STUN;
-                battle.ticks = 0;
-                dragon.getPhaseManager().setPhase(EnderDragonPhase.HOVERING);
-            }
+            dragon.hurtServer(level,
+                    level.damageSources().playerAttack(reflectingPlayer), REFLECT_DAMAGE);
+            ball.discard();
+            battle.move = Move.STUN;
+            battle.ticks = 0;
+            dragon.getPhaseManager().setPhase(EnderDragonPhase.HOVERING);
             return;
         }
     }
@@ -389,6 +411,27 @@ public final class EnderDragonBattleEvents {
      * Low priority deliberately runs after RaceCore VanillaStatScaling's x5
      * damage listener. Prevents bypassing 66% assault or 33% final phase.
      */
+    /**
+     * The boss must not kill itself by launching its own tagged fireballs into
+     * an obsidian tower. A truly reflected projectile has a player owner, so
+     * player return-fire and its explosion remain eligible to damage her.
+     */
+    @SubscribeEvent
+    public static void onDragonSelfFireballDamage(LivingIncomingDamageEvent event) {
+        if (!(event.getEntity() instanceof EnderDragon dragon)) return;
+        if (event.getSource().getEntity() != dragon) return;
+        if (event.getSource().getDirectEntity() instanceof LargeFireball fireball
+                && fireball.entityTags().contains(BALL_TAG)) {
+            event.setCanceled(true);
+            return;
+        }
+        // Explosion damage can have no direct projectile entity in its source.
+        if (event.getSource().is(DamageTypes.EXPLOSION)
+                || event.getSource().is(DamageTypes.FIREBALL)) {
+            event.setCanceled(true);
+        }
+    }
+
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onDragonDamaged(LivingDamageEvent.Pre event) {
         if (!(event.getEntity() instanceof EnderDragon dragon)
