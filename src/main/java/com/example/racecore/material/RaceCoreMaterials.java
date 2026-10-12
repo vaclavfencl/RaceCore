@@ -3,6 +3,7 @@ package com.example.racecore.material;
 import com.example.racecore.RaceCore;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.BlockItem;
@@ -11,6 +12,8 @@ import net.minecraft.world.item.ToolMaterial;
 import net.minecraft.world.item.equipment.ArmorMaterial;
 import net.minecraft.world.item.equipment.ArmorMaterials;
 import net.minecraft.world.item.equipment.ArmorType;
+import net.minecraft.world.item.equipment.EquipmentAsset;
+import net.minecraft.world.item.equipment.EquipmentAssets;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.bus.api.IEventBus;
@@ -25,17 +28,17 @@ import java.util.Map;
  *
  * Steel:
  * - made from iron + coal;
- * - armor uses the iron visual asset for now;
+ * - armor uses the RaceCore steel equipment asset;
  * - weapon material sits between iron and diamond.
  *
  * Emerald:
  * - medium utility/economy armor;
  * - +1 Luck per equipped piece is applied by EmeraldArmorLuckEvents;
- * - uses the diamond visual asset as a placeholder.
+ * - uses the RaceCore emerald equipment asset.
  *
  * Mithril:
  * - armor only; no Mithril weapon/tool tier is registered;
- * - armor uses the chainmail visual asset for now.
+ * - armor uses the RaceCore mithril equipment asset.
  */
 public final class RaceCoreMaterials {
     public static final DeferredRegister.Blocks BLOCKS =
@@ -80,14 +83,14 @@ public final class RaceCoreMaterials {
                     1.0F,
                     0.05F,
                     REPAIRS_STEEL,
-                    ArmorMaterials.IRON.assetId()
+                    equipmentAsset("steel")
             );
 
     /**
      * Emerald armor is a medium-weight utility armor set.
      *
-     * The RaceCore armor values are data-driven in armor.json. Diamond's
-     * equipment asset is reused only as a temporary visual placeholder.
+     * The RaceCore armor values are data-driven in armor.json, and worn
+     * textures come from the emerald equipment asset.
      */
     public static final ArmorMaterial EMERALD_ARMOR_MATERIAL =
             new ArmorMaterial(
@@ -98,12 +101,11 @@ public final class RaceCoreMaterials {
                     0.0F,
                     0.0F,
                     REPAIRS_EMERALD,
-                    ArmorMaterials.DIAMOND.assetId()
+                    equipmentAsset("emerald")
             );
 
     /**
-     * Mithril deliberately reuses chainmail's equipment asset for the current
-     * placeholder visuals while retaining its own durability and repair item.
+     * Mithril uses its own equipment asset, durability and repair item.
      */
     public static final ArmorMaterial MITHRIL_ARMOR_MATERIAL =
             new ArmorMaterial(
@@ -114,7 +116,7 @@ public final class RaceCoreMaterials {
                     2.0F,
                     0.0F,
                     REPAIRS_MITHRIL,
-                    ArmorMaterials.CHAINMAIL.assetId()
+                    equipmentAsset("mithril")
             );
 
     public static final DeferredBlock<Block> MITHRIL_ORE =
@@ -287,6 +289,13 @@ public final class RaceCoreMaterials {
                                 type
                         )
                 )
+        );
+    }
+
+    private static ResourceKey<EquipmentAsset> equipmentAsset(String path) {
+        return ResourceKey.create(
+                EquipmentAssets.ROOT_ID,
+                Identifier.fromNamespaceAndPath(RaceCore.MODID, path)
         );
     }
 

@@ -1,0 +1,19 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "racecore:mithril"
+      }
+    ],
+    "humanoid_baby": [
+      {
+        "texture": "racecore:mithril"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "racecore:mithril"
+      }
+    ]
+  }
+}
