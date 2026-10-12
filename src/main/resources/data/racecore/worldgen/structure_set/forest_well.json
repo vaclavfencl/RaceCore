@@ -1,0 +1,15 @@
+{
+  "structures": [
+    {
+      "structure": "racecore:forest_well",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "salt": 20610317,
+    "spacing": 12,
+    "separation": 4,
+    "spread_type": "linear"
+  }
+}
