@@ -30,7 +30,7 @@ import net.minecraft.world.level.storage.ValueOutput;
 
 /**
  * Territorial River Drake: bites with poison, hunts Spiders outside hunts,
- * and charges a 360-degree spin that knocks nearby players away.
+ * and charges a 360-degree spin that knocks nearby creatures away.
  * Client events play Blockbench bite and tail-swing animations.
  */
 public final class RiverDrakeEntity extends PathfinderMob {
@@ -46,6 +46,7 @@ public final class RiverDrakeEntity extends PathfinderMob {
     private static final int SPIN_COOLDOWN_TICKS = 8 * 20;
     private static final double SPIN_TRIGGER_DISTANCE_SQR = 3.25 * 3.25;
     private static final double SPIN_RADIUS = 2.75;
+    private static final double SPIN_VERTICAL_REACH = 2.0;
     // Base damage is scaled by VanillaStatScaling, just like the bite.
     private static final float SPIN_DAMAGE = 36.0F;
     private static final double SPIN_KNOCKBACK = 0.90;
@@ -198,23 +199,27 @@ public final class RiverDrakeEntity extends PathfinderMob {
                 this.getX(), this.getY() + 0.35, this.getZ(),
                 28, 1.25, 0.25, 1.25, 0.04);
 
-        List<Player> players = level.getEntitiesOfClass(
-                Player.class,
+        List<LivingEntity> victims = level.getEntitiesOfClass(
+                LivingEntity.class,
                 this.getBoundingBox().inflate(SPIN_RADIUS),
-                player -> player.isAlive() && !player.isCreative() && !player.isSpectator());
-        for (Player player : players) {
-            double dx = player.getX() - this.getX();
-            double dz = player.getZ() - this.getZ();
+                entity -> entity != this && entity.isAlive()
+                        // Feet-relative range keeps elevated targets outside the swing.
+                        && Math.abs(entity.getY() - this.getY()) <= SPIN_VERTICAL_REACH
+                        && (!(entity instanceof Player player)
+                                || (!player.isCreative() && !player.isSpectator())));
+        for (LivingEntity victim : victims) {
+            double dx = victim.getX() - this.getX();
+            double dz = victim.getZ() - this.getZ();
             double length = Math.sqrt(dx * dx + dz * dz);
             if (length < 0.001) {
                 dx = 1.0;
                 dz = 0.0;
                 length = 1.0;
             }
-            boolean hit = player.hurtServer(
+            boolean hit = victim.hurtServer(
                     level, this.damageSources().mobAttack(this), SPIN_DAMAGE);
             if (hit) {
-                player.push(dx / length * SPIN_KNOCKBACK,
+                victim.push(dx / length * SPIN_KNOCKBACK,
                         0.18, dz / length * SPIN_KNOCKBACK);
             }
         }
