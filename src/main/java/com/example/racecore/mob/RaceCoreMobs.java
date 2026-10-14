@@ -27,112 +27,52 @@ public final class RaceCoreMobs {
             DeferredRegister.createEntities(RaceCore.MODID);
 
     public static final DeferredHolder<EntityType<?>, EntityType<KoboldEntity>> KOBOLD =
-            ENTITY_TYPES.registerEntityType(
-                    "kobold",
-                    KoboldEntity::new,
-                    MobCategory.MONSTER,
-                    builder -> builder
-                            .sized(0.60F, 1.95F)
-                            .clientTrackingRange(8)
-                            .notInPeaceful()
-            );
+            ENTITY_TYPES.registerEntityType("kobold", KoboldEntity::new, MobCategory.MONSTER,
+                    builder -> builder.sized(0.60F, 1.0F).clientTrackingRange(8).notInPeaceful());
 
     public static final DeferredHolder<EntityType<?>, EntityType<RiverDrakeEntity>> RIVER_DRAKE =
-            ENTITY_TYPES.registerEntityType(
-                    "river_drake",
-                    RiverDrakeEntity::new,
-                    MobCategory.MONSTER,
-                    builder -> builder
-                            .sized(0.60F, 0.85F)
-                            .clientTrackingRange(8)
-                            .notInPeaceful()
-            );
+            ENTITY_TYPES.registerEntityType("river_drake", RiverDrakeEntity::new, MobCategory.MONSTER,
+                    builder -> builder.sized(0.60F, 0.85F).clientTrackingRange(8).notInPeaceful());
 
     public static final DeferredHolder<EntityType<?>, EntityType<MarauderEntity>> MARAUDER =
-            ENTITY_TYPES.registerEntityType(
-                    "marauder",
-                    MarauderEntity::new,
-                    MobCategory.MONSTER,
-                    builder -> builder
-                            .sized(0.60F, 1.95F)
-                            .clientTrackingRange(8)
-                            .notInPeaceful()
-            );
+            ENTITY_TYPES.registerEntityType("marauder", MarauderEntity::new, MobCategory.MONSTER,
+                    builder -> builder.sized(0.60F, 1.95F).clientTrackingRange(8).notInPeaceful());
 
     public static final DeferredHolder<EntityType<?>, EntityType<StoneSentinelEntity>> STONE_SENTINEL =
-            ENTITY_TYPES.registerEntityType(
-                    "stone_sentinel",
-                    StoneSentinelEntity::new,
-                    MobCategory.MONSTER,
-                    builder -> builder
-                            .sized(1.40F, 2.70F)
-                            .clientTrackingRange(10)
-                            .notInPeaceful()
-            );
+            ENTITY_TYPES.registerEntityType("stone_sentinel", StoneSentinelEntity::new, MobCategory.MONSTER,
+                    builder -> builder.sized(1.40F, 2.70F).clientTrackingRange(10).notInPeaceful());
 
     public static final DeferredHolder<EntityType<?>, EntityType<LesserStoneSentinelEntity>> LESSER_STONE_SENTINEL =
-            ENTITY_TYPES.registerEntityType(
-                    "lesser_stone_sentinel",
-                    LesserStoneSentinelEntity::new,
-                    MobCategory.MONSTER,
-                    builder -> builder
-                            .sized(1.40F, 2.70F)
-                            .clientTrackingRange(8)
-                            .notInPeaceful()
-            );
+            ENTITY_TYPES.registerEntityType("lesser_stone_sentinel", LesserStoneSentinelEntity::new, MobCategory.MONSTER,
+                    builder -> builder.sized(1.40F, 2.70F).clientTrackingRange(8).notInPeaceful());
 
     public static final DeferredHolder<EntityType<?>, EntityType<RockProjectileEntity>> ROCK_PROJECTILE =
-            ENTITY_TYPES.registerEntityType(
-                    "rock_projectile",
-                    RockProjectileEntity::new,
-                    MobCategory.MISC,
-                    builder -> builder
-                            .sized(0.25F, 0.25F)
-                            .clientTrackingRange(6)
-            );
+            ENTITY_TYPES.registerEntityType("rock_projectile", RockProjectileEntity::new, MobCategory.MISC,
+                    builder -> builder.sized(0.25F, 0.25F).clientTrackingRange(6));
 
-    private RaceCoreMobs() {
-    }
+    private RaceCoreMobs() {}
 
     public static void register(IEventBus modBus) {
         ENTITY_TYPES.register(modBus);
     }
 
-
     @SubscribeEvent
-    public static void onRegisterSpawnPlacements(
-            RegisterSpawnPlacementsEvent event
-    ) {
-        /*
-         * River Drakes are true river wildlife. They naturally enter the world
-         * in water inside biomes selected by the c:is_river biome modifier.
-         */
+    public static void onRegisterSpawnPlacements(RegisterSpawnPlacementsEvent event) {
         event.register(
-                RIVER_DRAKE.get(),
-                SpawnPlacementTypes.IN_WATER,
+                RIVER_DRAKE.get(), SpawnPlacementTypes.IN_WATER,
                 Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                 (type, level, spawnReason, pos, random) ->
                         level.getFluidState(pos).is(FluidTags.WATER),
                 RegisterSpawnPlacementsEvent.Operation.REPLACE
         );
 
-        /*
-         * Stone Sentinels naturally appear only in mountain biomes selected by
-         * the c:is_mountain biome modifier. They ignore vanilla monster light
-         * rules; the normal obstruction/collision checks still run afterwards.
-         */
         event.register(
-                STONE_SENTINEL.get(),
-                SpawnPlacementTypes.ON_GROUND,
+                STONE_SENTINEL.get(), SpawnPlacementTypes.ON_GROUND,
                 Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                 (type, level, spawnReason, pos, random) ->
                         level.getFluidState(pos).isEmpty()
-                                && level.getBlockState(pos.below())
-                                .isFaceSturdy(
-                                        level,
-                                        pos.below(),
-                                        Direction.UP
-                                ),
+                                && level.getBlockState(pos.below()).isFaceSturdy(
+                                        level, pos.below(), Direction.UP),
                 RegisterSpawnPlacementsEvent.Operation.REPLACE
         );
     }
@@ -143,9 +83,6 @@ public final class RaceCoreMobs {
         event.put(RIVER_DRAKE.get(), RiverDrakeEntity.createAttributes().build());
         event.put(MARAUDER.get(), MarauderEntity.createAttributes().build());
         event.put(STONE_SENTINEL.get(), StoneSentinelEntity.createAttributes().build());
-        event.put(
-                LESSER_STONE_SENTINEL.get(),
-                LesserStoneSentinelEntity.createAttributes().build()
-        );
+        event.put(LESSER_STONE_SENTINEL.get(), LesserStoneSentinelEntity.createAttributes().build());
     }
 }
