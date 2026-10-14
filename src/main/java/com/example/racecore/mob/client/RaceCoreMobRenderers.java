@@ -25,7 +25,15 @@ import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 public final class RaceCoreMobRenderers {
     private RaceCoreMobRenderers() {
     }
-
+    @SubscribeEvent
+    public static void registerSentinelLayer(
+            EntityRenderersEvent.RegisterLayerDefinitions event
+    ) {
+        event.registerLayerDefinition(
+                StoneSentinelModel.LAYER_LOCATION,
+                StoneSentinelModel::createBodyLayer
+        );
+    }
     @SubscribeEvent
     public static void registerRenderers(
             EntityRenderersEvent.RegisterRenderers event
@@ -47,12 +55,12 @@ public final class RaceCoreMobRenderers {
 
         event.registerEntityRenderer(
                 RaceCoreMobs.STONE_SENTINEL.get(),
-                IronGolemRenderer::new
+                StoneSentinelRenderer::new
         );
 
         event.registerEntityRenderer(
                 RaceCoreMobs.LESSER_STONE_SENTINEL.get(),
-                IronGolemRenderer::new
+                StoneSentinelRenderer::new
         );
 
         event.registerEntityRenderer(

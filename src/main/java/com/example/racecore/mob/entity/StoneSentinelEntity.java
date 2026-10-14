@@ -27,11 +27,12 @@ import net.minecraft.world.entity.animal.golem.IronGolem;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.entity.AnimationState;
 
 /**
  * Stone Sentinel.
  *
- * Placeholder visual: vanilla Iron Golem.
+ * Custom model and five animations; retains Iron Golem base combat traits.
  *
  * Adult:
  * - deterministic heavy melee,
@@ -46,11 +47,24 @@ import net.minecraft.world.phys.Vec3;
  * Both are immune to Poison and Wither.
  */
 public class StoneSentinelEntity extends IronGolem {
-    private static final int MELEE_INTERVAL_TICKS =
-            28;
+    public final AnimationState attackAnimationState = new AnimationState();
+    public final AnimationState throwAnimationState = new AnimationState();
+    public final AnimationState summonAnimationState = new AnimationState();
+
+    private int attackAnimationEndTick;
+    private int throwAnimationEndTick;
+    private int summonAnimationEndTick;
+    private static final int MELEE_INTERVAL_TICKS = 30;
+    private static final int MELEE_ANIMATION_TICKS = 20;
+    private static final int MELEE_RECOVERY_TICKS = 10;
+
+    // Server-side scheduled damage. The rock/summon abilities remain unchanged.
+    private LivingEntity pendingMeleeTarget;
+    private long meleeHitGameTick;
+    private long nextMeleeAttackGameTick;
 
     private static final int ROCK_WINDUP_TICKS =
-            15;
+            20;
 
     private static final int ADULT_ROCK_COOLDOWN_TICKS =
             5 * 20;
@@ -171,7 +185,44 @@ public class StoneSentinelEntity extends IronGolem {
 
     public boolean isAbilityCharging() {
         return rockWindup > 0
-                || summonWindup > 0;
+                || summonWindup > 0
+                || pendingMeleeTarget != null
+                || this.level().getGameTime() < nextMeleeAttackGameTick;
+    }
+
+    @Override
+    public void handleEntityEvent(byte eventId) {
+        if (eventId == 4) {
+            // Retains vanilla attack event behavior while playing our animation.
+            super.handleEntityEvent(eventId);
+            attackAnimationState.start(this.tickCount);
+            attackAnimationEndTick = this.tickCount + MELEE_ANIMATION_TICKS;
+        } else if (eventId == 61) {
+            throwAnimationState.start(this.tickCount);
+            throwAnimationEndTick = this.tickCount + 30;
+        } else if (eventId == 62) {
+            summonAnimationState.start(this.tickCount);
+            summonAnimationEndTick = this.tickCount + 40;
+        } else {
+            super.handleEntityEvent(eventId);
+        }
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (!this.level().isClientSide()) {
+            return;
+        }
+        if (attackAnimationState.isStarted() && tickCount >= attackAnimationEndTick) {
+            attackAnimationState.stop();
+        }
+        if (throwAnimationState.isStarted() && tickCount >= throwAnimationEndTick) {
+            throwAnimationState.stop();
+        }
+        if (summonAnimationState.isStarted() && tickCount >= summonAnimationEndTick) {
+            summonAnimationState.stop();
+        }
     }
 
     @Override
@@ -187,6 +238,24 @@ public class StoneSentinelEntity extends IronGolem {
         if (canSummonLessers()
                 && summonCooldown > 0) {
             summonCooldown--;
+        }
+
+        // The hit lands 30 ticks after the melee animation begins.
+        // Stop moving for the telegraphed strike. A player can dodge it.
+        if (pendingMeleeTarget != null) {
+            this.getNavigation().stop();
+            if (level.getGameTime() >= meleeHitGameTick) {
+                LivingEntity victim = pendingMeleeTarget;
+                pendingMeleeTarget = null;
+                if (this.isAlive()
+                        && victim.isAlive()
+                        && victim.level() == level
+                        && this.isWithinMeleeAttackRange(victim)
+                        && this.getSensing().hasLineOfSight(victim)) {
+                    landMeleeHit(level, victim);
+                }
+            }
+            return;
         }
 
         if (summonWindup > 0) {
@@ -261,6 +330,7 @@ public class StoneSentinelEntity extends IronGolem {
                 < MAX_LESSERS_NEARBY) {
             summonWindup =
                     SUMMON_WINDUP_TICKS;
+            this.level().broadcastEntityEvent(this, (byte) 62);
 
             this.getNavigation().stop();
             return;
@@ -276,6 +346,7 @@ public class StoneSentinelEntity extends IronGolem {
                         .hasLineOfSight(target)) {
             rockWindup =
                     ROCK_WINDUP_TICKS;
+            this.level().broadcastEntityEvent(this, (byte) 61);
 
             this.getNavigation().stop();
         }
@@ -286,66 +357,43 @@ public class StoneSentinelEntity extends IronGolem {
      * RaceCore Sentinel melee is fixed and therefore readable.
      */
     @Override
-    public boolean doHurtTarget(
-            ServerLevel level,
-            Entity target
-    ) {
-        if (isAbilityCharging()) {
+    public boolean doHurtTarget(ServerLevel level, Entity target) {
+        // Called when the AI decides to attack. Schedule damage instead of
+        // dealing it immediately. This does not alter the other mob attacks.
+        if (isAbilityCharging() || !(target instanceof LivingEntity victim)) {
             return false;
         }
+        if (!this.isWithinMeleeAttackRange(victim)) {
+            return false;
+        }
+        pendingMeleeTarget = victim;
+        meleeHitGameTick = level.getGameTime() + MELEE_ANIMATION_TICKS;
+        nextMeleeAttackGameTick = meleeHitGameTick + MELEE_RECOVERY_TICKS;
+        this.level().broadcastEntityEvent(this, (byte) 4);
+        this.getNavigation().stop();
+        return true; // The attack began; damage is applied on the scheduled tick.
+    }
 
-        this.level()
-                .broadcastEntityEvent(
-                        this,
-                        (byte) 4
-                );
-
-        float damage =
-                (float) this.getAttributeValue(
-                        Attributes.ATTACK_DAMAGE
-                );
-
-        boolean hurt =
-                target.hurtServer(
-                        level,
-                        this.damageSources()
-                                .mobAttack(this),
-                        damage
-                );
-
-        if (hurt
-                && target instanceof LivingEntity living) {
-            Vec3 delta =
-                    living.position()
-                            .subtract(
-                                    this.position()
-                            );
-
-            double horizontal =
-                    Math.max(
-                            0.001,
-                            Math.sqrt(
-                                    delta.x * delta.x
-                                            + delta.z * delta.z
-                            )
-                    );
-
-            living.push(
-                    delta.x / horizontal
-                            * 0.35,
+    private void landMeleeHit(ServerLevel level, LivingEntity target) {
+        float damage = (float) this.getAttributeValue(Attributes.ATTACK_DAMAGE);
+        boolean hurt = target.hurtServer(
+                level,
+                this.damageSources().mobAttack(this),
+                damage
+        );
+        if (hurt) {
+            Vec3 delta = target.position().subtract(this.position());
+            double horizontal = Math.max(
+                    0.001,
+                    Math.sqrt(delta.x * delta.x + delta.z * delta.z)
+            );
+            target.push(
+                    delta.x / horizontal * 0.35,
                     0.35,
-                    delta.z / horizontal
-                            * 0.35
+                    delta.z / horizontal * 0.35
             );
         }
-
-        this.playSound(
-                SoundEvents.IRON_GOLEM_ATTACK,
-                1.0F,
-                1.0F
-        );
-
-        return hurt;
+        this.playSound(SoundEvents.IRON_GOLEM_ATTACK, 1.0F, 1.0F);
     }
 
     @Override
