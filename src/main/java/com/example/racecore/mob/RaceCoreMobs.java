@@ -32,7 +32,8 @@ public final class RaceCoreMobs {
 
     public static final DeferredHolder<EntityType<?>, EntityType<RiverDrakeEntity>> RIVER_DRAKE =
             ENTITY_TYPES.registerEntityType("river_drake", RiverDrakeEntity::new, MobCategory.MONSTER,
-                    builder -> builder.sized(0.60F, 0.85F).clientTrackingRange(8).notInPeaceful());
+                    builder -> builder.sized(RiverDrakeEntity.BASE_HITBOX_WIDTH,
+                            RiverDrakeEntity.BASE_HITBOX_HEIGHT).clientTrackingRange(8).notInPeaceful());
 
     public static final DeferredHolder<EntityType<?>, EntityType<MarauderEntity>> MARAUDER =
             ENTITY_TYPES.registerEntityType("marauder", MarauderEntity::new, MobCategory.MONSTER,
