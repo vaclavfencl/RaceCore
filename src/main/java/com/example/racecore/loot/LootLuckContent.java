@@ -27,19 +27,21 @@ public final class LootLuckContent {
                     LuckQualityLootModifier.CODEC
             );
 
+    // Adds a final total-stack emerald limit for Buried Treasure chests only.
+    public static final DeferredHolder<
+            MapCodec<? extends IGlobalLootModifier>,
+            MapCodec<BuriedTreasureEmeraldCapModifier>
+            > BURIED_TREASURE_EMERALD_CAP =
+            GLOBAL_LOOT_MODIFIERS.register(
+                    "buried_treasure_emerald_cap",
+                    BuriedTreasureEmeraldCapModifier.CODEC
+            );
+
     private LootLuckContent() {
     }
 
-    public static void register(
-            IEventBus modBus
-    ) {
-        GLOBAL_LOOT_MODIFIERS.register(
-                modBus
-        );
-
-        /*
-         * Fail early if the Phase 7 tuning file is malformed.
-         */
+    public static void register(IEventBus modBus) {
+        GLOBAL_LOOT_MODIFIERS.register(modBus);
         LootLuckRegistry.load();
     }
 }
