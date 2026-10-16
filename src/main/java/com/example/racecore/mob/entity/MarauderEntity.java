@@ -10,7 +10,8 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.AnimationState;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -30,123 +31,57 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 
 /**
- * Marauder.
- *
- * Placeholder visual: vanilla Pillager, but this first version is a melee
- * raider.
- *
- * Every combat cycle it performs a clearly telegraphed 2 second power-up.
- * Hitting it DURING that power-up interrupts the ability.
- *
- * Once Frenzy actually begins, damage no longer cancels it. That is deliberate:
- * the player's interruption window is only the telegraphed charge.
+ * Marauder melee fighter. The original adaptive attack and Frenzy behavior are
+ * retained; only networked visual animation events are added for its custom model.
  */
 public final class MarauderEntity extends Pillager {
+    // Dedicated entity status ids, separate from vanilla's hand-swing/status events.
+    private static final byte EVENT_POWERUP_START = 71;
+    private static final byte EVENT_POWERUP_STOP = 72;
+    private static final byte EVENT_ATTACK_START = 73;
+
+    // These states exist client-side; packets from server start/stop the animation.
+    public final AnimationState attackAnimationState = new AnimationState();
+    public final AnimationState powerupAnimationState = new AnimationState();
+    private int attackAnimationEndsAt;
+    private int powerupAnimationEndsAt;
+
     private static final Identifier FRENZY_SPEED_ID =
-            Identifier.fromNamespaceAndPath(
-                    RaceCore.MODID,
-                    "marauder_frenzy_speed"
-            );
+            Identifier.fromNamespaceAndPath(RaceCore.MODID, "marauder_frenzy_speed");
+    private static final AttributeModifier FRENZY_SPEED = new AttributeModifier(
+            FRENZY_SPEED_ID, 0.35, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
 
-    private static final AttributeModifier FRENZY_SPEED =
-            new AttributeModifier(
-                    FRENZY_SPEED_ID,
-                    0.35,
-                    AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
-            );
-
-    private static final int POWER_UP_TICKS =
-            2 * 20;
-
-    private static final int FRENZY_DURATION_TICKS =
-            6 * 20;
-
-    private static final int FRENZY_COOLDOWN_TICKS =
-            12 * 20;
-
-    private static final int INTERRUPTED_COOLDOWN_TICKS =
-            8 * 20;
-
-    private static final int NORMAL_ATTACK_INTERVAL =
-            20;
-
-    private static final int FRENZY_ATTACK_INTERVAL =
-            10;
-
-    private static final double POWER_UP_MAX_RANGE_SQR =
-            16.0 * 16.0;
+    private static final int POWER_UP_TICKS = 2 * 20;
+    private static final int FRENZY_DURATION_TICKS = 6 * 20;
+    private static final int FRENZY_COOLDOWN_TICKS = 12 * 20;
+    private static final int INTERRUPTED_COOLDOWN_TICKS = 8 * 20;
+    private static final int NORMAL_ATTACK_INTERVAL = 20;
+    private static final int FRENZY_ATTACK_INTERVAL = 10;
+    private static final double POWER_UP_MAX_RANGE_SQR = 16.0 * 16.0;
+    private static final int ATTACK_ANIMATION_TICKS = 11; // 0.5417 seconds at 20 TPS
 
     private int powerUpTicks;
-
     private int frenzyTicks;
+    private int frenzyCooldown = 5 * 20;
 
-    private int frenzyCooldown =
-            5 * 20;
-
-    public MarauderEntity(
-            EntityType<? extends MarauderEntity> type,
-            Level level
-    ) {
+    public MarauderEntity(EntityType<? extends MarauderEntity> type, Level level) {
         super(type, level);
         this.xpReward = 10;
     }
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(
-                0,
-                new FloatGoal(this)
-        );
-
-        this.goalSelector.addGoal(
-                2,
-                new AdaptiveMeleeAttackGoal(
-                        this,
-                        () -> isFrenzied()
-                                ? 1.15
-                                : 1.0,
-                        () -> isFrenzied()
-                                ? FRENZY_ATTACK_INTERVAL
-                                : NORMAL_ATTACK_INTERVAL,
-                        this::isPoweringUp
-                )
-        );
-
-        this.goalSelector.addGoal(
-                7,
-                new WaterAvoidingRandomStrollGoal(
-                        this,
-                        0.9
-                )
-        );
-
-        this.goalSelector.addGoal(
-                8,
-                new LookAtPlayerGoal(
-                        this,
-                        Player.class,
-                        12.0F
-                )
-        );
-
-        this.goalSelector.addGoal(
-                8,
-                new RandomLookAroundGoal(this)
-        );
-
-        this.targetSelector.addGoal(
-                1,
-                new HurtByTargetGoal(this)
-        );
-
-        this.targetSelector.addGoal(
-                2,
-                new NearestAttackableTargetGoal<>(
-                        this,
-                        Player.class,
-                        true
-                )
-        );
+        this.goalSelector.addGoal(0, new FloatGoal(this));
+        this.goalSelector.addGoal(2, new AdaptiveMeleeAttackGoal(
+                this,
+                () -> isFrenzied() ? 1.15 : 1.0,
+                () -> isFrenzied() ? FRENZY_ATTACK_INTERVAL : NORMAL_ATTACK_INTERVAL,
+                this::isPoweringUp));
+        this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 0.9));
+        this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 12.0F));
+        this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
+        this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
+        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -165,194 +100,144 @@ public final class MarauderEntity extends Pillager {
         return frenzyTicks > 0;
     }
 
+    /** Preserve the existing immediate melee hit, but announce its animation to clients. */
     @Override
-    protected void customServerAiStep(
-            ServerLevel level
-    ) {
+    public boolean doHurtTarget(ServerLevel level, Entity victim) {
+        boolean hit = super.doHurtTarget(level, victim);
+        if (hit) {
+            level.broadcastEntityEvent(this, EVENT_ATTACK_START);
+        }
+        return hit;
+    }
+
+    @Override
+    public void handleEntityEvent(byte eventId) {
+        if (eventId == EVENT_POWERUP_START) {
+            attackAnimationState.stop();
+            powerupAnimationState.start(this.tickCount);
+            powerupAnimationEndsAt = this.tickCount + POWER_UP_TICKS;
+        } else if (eventId == EVENT_POWERUP_STOP) {
+            powerupAnimationState.stop();
+        } else if (eventId == EVENT_ATTACK_START) {
+            attackAnimationState.start(this.tickCount);
+            attackAnimationEndsAt = this.tickCount + ATTACK_ANIMATION_TICKS;
+        } else {
+            super.handleEntityEvent(eventId);
+        }
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (!this.level().isClientSide()) {
+            return;
+        }
+        if (attackAnimationState.isStarted() && this.tickCount >= attackAnimationEndsAt) {
+            attackAnimationState.stop();
+        }
+        if (powerupAnimationState.isStarted() && this.tickCount >= powerupAnimationEndsAt) {
+            powerupAnimationState.stop();
+        }
+    }
+
+    @Override
+    protected void customServerAiStep(ServerLevel level) {
         super.customServerAiStep(level);
 
         if (isPoweringUp()) {
             powerUpTicks--;
-
             if (powerUpTicks % 5 == 0) {
                 level.sendParticles(
                         ParticleTypes.ANGRY_VILLAGER,
-                        this.getX(),
-                        this.getY()
-                                + this.getBbHeight()
-                                * 0.65,
-                        this.getZ(),
-                        4,
-                        0.35,
-                        0.35,
-                        0.35,
-                        0.0
-                );
+                        this.getX(), this.getY() + this.getBbHeight() * 0.65, this.getZ(),
+                        4, 0.35, 0.35, 0.35, 0.0);
             }
-
             if (powerUpTicks == 0) {
                 beginFrenzy(level);
             }
-
             return;
         }
 
         if (isFrenzied()) {
             frenzyTicks--;
-
             if (frenzyTicks % 10 == 0) {
                 level.sendParticles(
                         ParticleTypes.ANGRY_VILLAGER,
-                        this.getX(),
-                        this.getY()
-                                + this.getBbHeight()
-                                * 0.75,
-                        this.getZ(),
-                        2,
-                        0.25,
-                        0.25,
-                        0.25,
-                        0.0
-                );
+                        this.getX(), this.getY() + this.getBbHeight() * 0.75, this.getZ(),
+                        2, 0.25, 0.25, 0.25, 0.0);
             }
-
             if (frenzyTicks == 0) {
                 endFrenzy();
-                frenzyCooldown =
-                        FRENZY_COOLDOWN_TICKS;
+                frenzyCooldown = FRENZY_COOLDOWN_TICKS;
             }
-
             return;
         }
 
         if (frenzyCooldown > 0) {
             frenzyCooldown--;
         }
-
         if (frenzyCooldown <= 0
                 && this.getTarget() != null
                 && this.getTarget().isAlive()
-                && this.distanceToSqr(
-                        this.getTarget()
-                ) <= POWER_UP_MAX_RANGE_SQR) {
+                && this.distanceToSqr(this.getTarget()) <= POWER_UP_MAX_RANGE_SQR) {
             beginPowerUp();
         }
     }
 
-    /**
-     * The only interruption window.
-     *
-     * Damage while Frenzy is already active deliberately does NOT remove the
-     * buff.
-     */
+    /** Damage received during the charge interrupts it, as in the original AI. */
     @Override
-    public boolean hurtServer(
-            ServerLevel level,
-            DamageSource source,
-            float damage
-    ) {
-        boolean wasHurt =
-                super.hurtServer(
-                        level,
-                        source,
-                        damage
-                );
-
+    public boolean hurtServer(ServerLevel level, DamageSource source, float damage) {
+        boolean wasHurt = super.hurtServer(level, source, damage);
         if (wasHurt && isPoweringUp()) {
             interruptPowerUp();
         }
-
         return wasHurt;
     }
 
     private void beginPowerUp() {
-        powerUpTicks =
-                POWER_UP_TICKS;
-
-        this.playSound(
-                SoundEvents.PILLAGER_CELEBRATE,
-                1.0F,
-                0.8F
-        );
+        powerUpTicks = POWER_UP_TICKS;
+        this.level().broadcastEntityEvent(this, EVENT_POWERUP_START);
+        this.playSound(SoundEvents.PILLAGER_CELEBRATE, 1.0F, 0.8F);
     }
 
     private void interruptPowerUp() {
         powerUpTicks = 0;
-        frenzyCooldown =
-                INTERRUPTED_COOLDOWN_TICKS;
+        frenzyCooldown = INTERRUPTED_COOLDOWN_TICKS;
+        this.level().broadcastEntityEvent(this, EVENT_POWERUP_STOP);
     }
 
-    private void beginFrenzy(
-            ServerLevel level
-    ) {
-        frenzyTicks =
-                FRENZY_DURATION_TICKS;
-
-        AttributeInstance speed =
-                this.getAttribute(
-                        Attributes.MOVEMENT_SPEED
-                );
-
+    private void beginFrenzy(ServerLevel level) {
+        frenzyTicks = FRENZY_DURATION_TICKS;
+        level.broadcastEntityEvent(this, EVENT_POWERUP_STOP);
+        AttributeInstance speed = this.getAttribute(Attributes.MOVEMENT_SPEED);
         if (speed != null) {
-            speed.removeModifier(
-                    FRENZY_SPEED_ID
-            );
-
-            speed.addTransientModifier(
-                    FRENZY_SPEED
-            );
+            speed.removeModifier(FRENZY_SPEED_ID);
+            speed.addTransientModifier(FRENZY_SPEED);
         }
-
         level.sendParticles(
                 ParticleTypes.ANGRY_VILLAGER,
-                this.getX(),
-                this.getY()
-                        + this.getBbHeight()
-                        * 0.75,
-                this.getZ(),
-                18,
-                0.45,
-                0.55,
-                0.45,
-                0.03
-        );
+                this.getX(), this.getY() + this.getBbHeight() * 0.75, this.getZ(),
+                18, 0.45, 0.55, 0.45, 0.03);
     }
 
     private void endFrenzy() {
-        AttributeInstance speed =
-                this.getAttribute(
-                        Attributes.MOVEMENT_SPEED
-                );
-
+        AttributeInstance speed = this.getAttribute(Attributes.MOVEMENT_SPEED);
         if (speed != null) {
-            speed.removeModifier(
-                    FRENZY_SPEED_ID
-            );
+            speed.removeModifier(FRENZY_SPEED_ID);
         }
     }
 
     @Override
-    protected void populateDefaultEquipmentSlots(
-            RandomSource random,
-            DifficultyInstance difficulty
-    ) {
-        this.setItemSlot(
-                EquipmentSlot.MAINHAND,
-                new ItemStack(Items.IRON_AXE)
-        );
-
-        this.setDropChance(
-                EquipmentSlot.MAINHAND,
-                0.0F
-        );
+    protected void populateDefaultEquipmentSlots(RandomSource random, DifficultyInstance difficulty) {
+        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_AXE));
+        this.setDropChance(EquipmentSlot.MAINHAND, 0.0F);
     }
 
     @Override
     protected void populateDefaultEquipmentEnchantments(
             ServerLevelAccessor level,
             RandomSource random,
-            DifficultyInstance localDifficulty
-    ) {
+            DifficultyInstance localDifficulty) {
         // No random spawned-weapon enchantments.
     }
 }
