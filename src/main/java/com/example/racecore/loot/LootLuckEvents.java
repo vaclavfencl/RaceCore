@@ -83,8 +83,14 @@ public final class LootLuckEvents {
      * Rewrites loaded loot tables once, at data reload time. Runtime loot generation then uses normal
      * vanilla selection with the player's LootContext luck value.
      */
+
     @SubscribeEvent
     public static void onLootTableLoad(LootTableLoadEvent event) {
+        // Only modify loot tables enabled in RaceCore's configuration.
+        if (!LootLuckRegistry.enabledForPath(event.getName().getPath())) {
+            return;
+        }
+
         RegistryOps<JsonElement> ops = RegistryOps.create(
                 JsonOps.INSTANCE,
                 registryInfoLookup(event.getRegistries())
@@ -92,41 +98,62 @@ public final class LootLuckEvents {
 
         JsonElement encoded = LootTable.DIRECT_CODEC
                 .encodeStart(ops, event.getTable())
-                .resultOrPartial(message -> LOGGER.warn("RaceCore could not serialize a loot table: {}", message))
+                .resultOrPartial(message ->
+                        LOGGER.warn("RaceCore could not serialize loot table {}: {}",
+                                event.getName(), message))
                 .orElse(null);
 
         if (!(encoded instanceof JsonObject originalRoot)) {
             return;
         }
 
-        // Protect against accidental double-patching if another reload path feeds an already patched table.
         if (containsRaceCoreQuantityModifier(originalRoot)) {
             return;
         }
 
-        // Minecraft 26.3 uses modifier/type. Snapshot 3 and older tables used functions/function.
-        // Try the format that the encoded table appears to use first, then fall back to the other one.
         JsonStyle preferred = detectStyle(originalRoot);
-        JsonStyle fallback = preferred == JsonStyle.MODERN ? JsonStyle.LEGACY : JsonStyle.MODERN;
+        JsonStyle fallback = preferred == JsonStyle.MODERN
+                ? JsonStyle.LEGACY
+                : JsonStyle.MODERN;
 
-        LootTable patched = tryPatchAndDecode(originalRoot, ops, preferred);
+        // A table with no eligible weighted entries is not a failure.
+        JsonObject probe = originalRoot.deepCopy();
+        if (patchLootTableObject(probe, preferred) == 0) {
+            return;
+        }
+
+        StringBuilder errors = new StringBuilder();
+
+        LootTable patched = tryPatchAndDecode(
+                originalRoot, ops, preferred, errors
+        );
+
         if (patched == null) {
-            patched = tryPatchAndDecode(originalRoot, ops, fallback);
+            patched = tryPatchAndDecode(
+                    originalRoot, ops, fallback, errors
+            );
         }
 
         if (patched != null) {
             event.setTable(patched);
         } else {
-            LOGGER.warn("RaceCore loot luck could not patch a loot table; vanilla table retained.");
+            LOGGER.warn(
+                    "RaceCore loot luck failed to patch {}: {}",
+                    event.getName(), errors
+            );
         }
     }
+
+
 
     private static LootTable tryPatchAndDecode(
             JsonObject originalRoot,
             RegistryOps<JsonElement> ops,
-            JsonStyle style
+            JsonStyle style,
+            StringBuilder errors
     ) {
         JsonObject candidate = originalRoot.deepCopy();
+
         int changedEntries = patchLootTableObject(candidate, style);
 
         if (changedEntries == 0) {
@@ -135,7 +162,15 @@ public final class LootLuckEvents {
 
         return LootTable.DIRECT_CODEC
                 .parse(ops, candidate)
-                .result()
+                .resultOrPartial(message -> {
+                    if (errors.length() > 0) {
+                        errors.append(" | ");
+                    }
+
+                    errors.append(style)
+                            .append(": ")
+                            .append(message);
+                })
                 .orElse(null);
     }
 
