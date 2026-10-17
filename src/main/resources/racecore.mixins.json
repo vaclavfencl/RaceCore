@@ -12,7 +12,9 @@
     "RegenerationMobEffectMixin",
     "HealOrHarmMobEffectMixin",
     "PlayerPotionMiningMixin",
-    "RaidTickMixin"
+    "RaidTickMixin",
+    "RaidsStartMixin",
+    "RaidWaveBalanceMixin"
   ],
   "client": [
     "client.ClientBundleTooltipMixin"

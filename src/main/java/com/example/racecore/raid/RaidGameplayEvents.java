@@ -16,11 +16,17 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BarrelBlockEntity;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
@@ -34,6 +40,7 @@ public final class RaidGameplayEvents {
     private static final double PARTICIPATION_RADIUS_SQR =
             (double) PARTICIPATION_RADIUS * PARTICIPATION_RADIUS;
     private static final int REWARD_SEARCH_RADIUS = 10;
+    private static final int BELL_CUBE_HALF_EXTENT = 2;
     private static final int BELL_SEARCH_RADIUS = 32;
 
     private RaidGameplayEvents() {}
@@ -185,25 +192,56 @@ public final class RaidGameplayEvents {
         return best;
     }
 
+    /**
+     * Choose a random usable position in the 5x5x5 bell-centered cube first.
+     * Prefer aboveground, supported floor locations; indoors is an allowed
+     * fallback. If that small cube is full, expand the search ring-by-ring.
+     * No existing blocks are overwritten.
+     */
     private static BlockPos findSafePlace(ServerLevel level, BlockPos origin) {
-        // Keep at least one block gap from bell. Search usable air without
-        // replacing villagers, beds, furniture, or player-made constructions.
-        for (int radius = 1; radius <= REWARD_SEARCH_RADIUS; radius++) {
-            for (int yOffset = 0; yOffset <= 3; yOffset++) {
-                for (int side = 0; side < 2; side++) {
-                    int dy = side == 0 ? yOffset : -yOffset;
-                    if (yOffset == 0 && side == 1) continue;
-                    for (int dx = -radius; dx <= radius; dx++) {
-                        for (int dz = -radius; dz <= radius; dz++) {
-                            if (Math.max(Math.abs(dx), Math.abs(dz)) != radius) continue;
-                            BlockPos pos = origin.offset(dx, dy, dz);
-                            if (isSafe(level, pos)) return pos.immutable();
-                        }
-                    }
+        List<BlockPos> inner = new ArrayList<>();
+        for (int dy = -BELL_CUBE_HALF_EXTENT; dy <= BELL_CUBE_HALF_EXTENT; dy++) {
+            for (int dx = -BELL_CUBE_HALF_EXTENT; dx <= BELL_CUBE_HALF_EXTENT; dx++) {
+                for (int dz = -BELL_CUBE_HALF_EXTENT; dz <= BELL_CUBE_HALF_EXTENT; dz++) {
+                    BlockPos pos = origin.offset(dx, dy, dz);
+                    if (isSafe(level, pos)) inner.add(pos.immutable());
                 }
             }
         }
-        return null;
+        BlockPos nearby = randomlyChooseGroundFirst(level, inner);
+        if (nearby != null) return nearby;
+
+        // Bell may be boxed in, or more than one reward barrel is due.
+        // Expand gradually without touching existing terrain or containers.
+        for (int radius = 3; radius <= REWARD_SEARCH_RADIUS; radius++) {
+            List<BlockPos> ring = new ArrayList<>();
+            for (int dy = -3; dy <= 3; dy++) {
+                for (int dx = -radius; dx <= radius; dx++) {
+                    for (int dz = -radius; dz <= radius; dz++) {
+                        if (Math.max(Math.abs(dx), Math.abs(dz)) != radius) continue;
+                        BlockPos pos = origin.offset(dx, dy, dz);
+                        if (isSafe(level, pos)) ring.add(pos.immutable());
+                    }
+                }
+            }
+            BlockPos farther = randomlyChooseGroundFirst(level, ring);
+            if (farther != null) return farther;
+        }
+        return null; // Retry later: the eligible player's reward is never consumed.
+    }
+
+    private static BlockPos randomlyChooseGroundFirst(ServerLevel level,
+                                                     List<BlockPos> candidates) {
+        if (candidates.isEmpty()) return null;
+        // Shuffle first so position isn't biased toward negative X/Z or low Y.
+        Collections.shuffle(candidates, new Random(level.getRandom().nextLong()));
+        for (BlockPos candidate : candidates) {
+            if (level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                    candidate.getX(), candidate.getZ()) == candidate.getY()) {
+                return candidate; // Exposed ground, not a rooftop gap or indoor shelf.
+            }
+        }
+        return candidates.getFirst(); // A supported indoor floor is fine too.
     }
 
     private static boolean isSafe(ServerLevel level, BlockPos pos) {
@@ -212,7 +250,11 @@ public final class RaidGameplayEvents {
         if (!level.isEmptyBlock(pos) || !level.isEmptyBlock(pos.above())
                 || !level.getFluidState(pos).isEmpty()) return false;
         BlockPos ground = pos.below();
-        return level.isInWorldBounds(ground) && level.hasChunkAt(ground)
-                && level.getBlockState(ground).isFaceSturdy(level, ground, Direction.UP);
+        if (!level.isInWorldBounds(ground) || !level.hasChunkAt(ground)
+                || !level.getBlockState(ground).isFaceSturdy(level, ground, Direction.UP)) {
+            return false;
+        }
+        // Do not trap villagers, players, or animals inside a newly placed barrel.
+        return level.getEntities(null, new AABB(pos)).isEmpty();
     }
 }
