@@ -14,7 +14,11 @@
     "PlayerPotionMiningMixin",
     "RaidTickMixin",
     "RaidsStartMixin",
-    "RaidWaveBalanceMixin"
+    "RaidWaveBalanceMixin",
+    "MansionTreasuryFirstRoomMixin",
+    "MansionTreasuryUpperRoomMixin",
+    "MansionTreasuryMarkersMixin",
+    "MansionTreasuryProcessorMixin"
   ],
   "client": [
     "client.ClientBundleTooltipMixin"

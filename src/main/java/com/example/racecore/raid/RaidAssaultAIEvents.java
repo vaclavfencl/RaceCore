@@ -14,6 +14,7 @@ import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.monster.Ravager;
 import net.minecraft.world.entity.monster.illager.Evoker;
 import net.minecraft.world.entity.monster.illager.Vindicator;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.raid.Raider;
 import net.minecraft.world.level.block.state.BlockState;
@@ -48,6 +49,11 @@ public final class RaidAssaultAIEvents {
     private static final DustParticleOptions GREEN = new DustParticleOptions(0x39FF70, 1.6F);
     private static final DustParticleOptions DARK_GREEN = new DustParticleOptions(0x0C9242, 1.1F);
     private static final Map<Ravager, RavagerCharge> CHARGES = new WeakHashMap<>();
+    // Sight memory belongs to the raid vindicator, not merely to the Evoker.
+    // A player must have been visibly spotted BEFORE enclosing themselves behind blocks.
+    private static final Map<Vindicator, Map<UUID, Long>> PLAYER_SIGHTINGS = new WeakHashMap<>();
+    private static final int PLAYER_SIGHT_MEMORY_TICKS = 600; // 30 seconds
+
 
     private RaidAssaultAIEvents() {}
 
@@ -69,6 +75,10 @@ public final class RaidAssaultAIEvents {
 
     @SubscribeEvent
     public static void afterMobTick(EntityTickEvent.Post event) {
+        if (event.getEntity() instanceof Vindicator vindicator
+                && vindicator.level() instanceof ServerLevel sightLevel) {
+            rememberVisiblePlayers(sightLevel, vindicator);
+        }
         if (event.getEntity() instanceof Ravager ravager
                 && ravager.level() instanceof ServerLevel level) {
             if (!active(ravager)) {
@@ -106,6 +116,51 @@ public final class RaidAssaultAIEvents {
         for (Villager villager : villagers) {
             Path path = raider.getNavigation().createPath(villager, 0);
             if (path == null || !path.canReach()) return villager;
+        }
+        return null;
+    }
+
+    /** Track only verified, unobstructed sightings made by active raid Vindicators. */
+    private static void rememberVisiblePlayers(ServerLevel level, Vindicator vindicator) {
+        if (!active(vindicator)) {
+            PLAYER_SIGHTINGS.remove(vindicator);
+            return;
+        }
+        if (vindicator.tickCount % 10 != 0) return;
+        Map<UUID, Long> seen = PLAYER_SIGHTINGS.computeIfAbsent(vindicator, key -> new HashMap<>());
+        long now = level.getGameTime();
+        seen.entrySet().removeIf(entry -> now - entry.getValue() > PLAYER_SIGHT_MEMORY_TICKS);
+        for (Player player : level.getEntitiesOfClass(Player.class,
+                vindicator.getBoundingBox().inflate(32, 8, 32),
+                p -> p.isAlive() && !p.isSpectator() && !p.isCreative())) {
+            if (vindicator.getSensing().hasLineOfSight(player)) {
+                seen.put(player.getUUID(), now);
+            }
+        }
+    }
+
+    /** Player abduction requires a Vindicator's earlier line-of-sight AND no usable route now. */
+    private static Player trackedUnreachablePlayer(Evoker evoker, ServerLevel level) {
+        long now = level.getGameTime();
+        List<Player> candidates = level.getEntitiesOfClass(Player.class,
+                evoker.getBoundingBox().inflate(32, 8, 32),
+                player -> player.isAlive() && !player.isCreative() && !player.isSpectator());
+        java.util.Collections.shuffle(candidates, new java.util.Random(evoker.getRandom().nextLong()));
+        for (Player player : candidates) {
+            boolean wasSeen = false;
+            for (Map.Entry<Vindicator, Map<UUID, Long>> record : PLAYER_SIGHTINGS.entrySet()) {
+                Vindicator watcher = record.getKey();
+                Long seenAt = record.getValue().get(player.getUUID());
+                if (seenAt != null && now - seenAt <= PLAYER_SIGHT_MEMORY_TICKS
+                        && watcher.isAlive() && watcher.level() == level
+                        && active(watcher) && watcher.getCurrentRaid() == evoker.getCurrentRaid()) {
+                    Path watcherPath = watcher.getNavigation().createPath(player, 0);
+                    if (watcherPath == null || !watcherPath.canReach()) wasSeen = true;
+                }
+            }
+            if (!wasSeen) continue;
+            Path evokerPath = evoker.getNavigation().createPath(player, 0);
+            if (evokerPath == null || !evokerPath.canReach()) return player;
         }
         return null;
     }
@@ -370,7 +425,7 @@ public final class RaidAssaultAIEvents {
     private static final class EvokerAbductionGoal extends Goal {
         private static final int CAST_TICKS = 100;
         private final Evoker mob;
-        private Villager target;
+        private LivingEntity target;
         private int remaining;
         private int cooldown = 80;
         private boolean interrupted;
@@ -385,7 +440,8 @@ public final class RaidAssaultAIEvents {
             if (!(mob.level() instanceof ServerLevel level) || !active(mob)) return false;
             if (cooldown-- > 0) return false;
             cooldown = 50;
-            target = randomUnreachableVillager(mob, level, 32);
+            target = trackedUnreachablePlayer(mob, level);
+            if (target == null) target = randomUnreachableVillager(mob, level, 32);
             return target != null && hasLanding(level, mob, target);
         }
 
@@ -483,11 +539,11 @@ public final class RaidAssaultAIEvents {
                     center.z, 8, 0.65, 1.7, 0.65, 0.1);
         }
 
-        private static boolean hasLanding(ServerLevel level, Evoker mob, Villager villager) {
+        private static boolean hasLanding(ServerLevel level, Evoker mob, LivingEntity villager) {
             return landing(level, mob, villager) != null;
         }
 
-        private static BlockPos landing(ServerLevel level, Evoker mob, Villager villager) {
+        private static BlockPos landing(ServerLevel level, Evoker mob, LivingEntity villager) {
             BlockPos base = mob.blockPosition();
             List<BlockPos> choices = new ArrayList<>();
             for (int x = -4; x <= 4; x++) {
@@ -501,8 +557,7 @@ public final class RaidAssaultAIEvents {
                         if (!level.getFluidState(at).isEmpty()) continue;
                         BlockPos ground = at.below();
                         if (!level.getBlockState(ground).isFaceSturdy(level, ground, Direction.UP)) continue;
-                        if (!level.getEntities((net.minecraft.world.entity.Entity) null,
-                                new AABB(at).inflate(0.15),
+                        if (!level.getEntities((net.minecraft.world.entity.Entity) null, new AABB(at).inflate(0.15),
                                 entity -> entity != villager && entity.isAlive()).isEmpty()) continue;
                         choices.add(at.immutable());
                     }
@@ -560,13 +615,8 @@ public final class RaidAssaultAIEvents {
                     if (!hit.add(victim.getUUID())) continue;
                     victim.hurtServer(level, level.damageSources().mobAttack(ravager),
                             (float) (ravager.getAttributeValue(Attributes.ATTACK_DAMAGE) * 2.0));
-                    victim.knockback(
-                            2.0,
-                            -direction.x,
-                            -direction.z,
-                            level.damageSources().mobAttack(ravager),
-                            1.0F
-                    );
+                    victim.knockback(2.0, -direction.x, -direction.z,
+                            level.damageSources().mobAttack(ravager), 1.0F);
                 }
                 if (charging == 0) stop(ravager);
                 return;
