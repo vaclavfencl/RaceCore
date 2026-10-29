@@ -1,25 +1,38 @@
+# RaceCore
 
-Installation information
-=======
+RaceCore is a Minecraft mod built with **NeoForge**, designed to overhaul vanilla survival with new races, combat mechanics, progression systems, and tougher challenges.
 
-This template repository can be directly cloned to get you started with a new
-mod. Simply create a new repository cloned from this one, by following the
-instructions provided by [GitHub](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
+The goal is to create a more challenging and varied survival experience while keeping the core Minecraft gameplay intact.
 
-Once you have your clone, simply open the repository in the IDE of your choice. The usual recommendation for an IDE is either IntelliJ IDEA or Eclipse.
+## Features
 
-If at any point you are missing libraries in your IDE, or you've run into problems you can
-run `gradlew --refresh-dependencies` to refresh the local cache. `gradlew clean` to reset everything 
-{this does not affect your code} and then start the process again.
+- **10 Playable Races** – Unique stats, abilities, strengths, and weaknesses.
+- **Combat Overhaul** – Rebalanced armor, damage, weapons, and enchantments.
+- **Expanded Equipment** – New weapons, armor sets, and materials.
+- **World & Mob Changes** – Custom creatures, structures, loot, and spawning mechanics.
+- **Progression Rework** – Changes to mining, crafting, trading, and equipment progression.
+- **Survival Challenges** – Semi-hardcore death penalties, dangerous nights, and dynamic enemy encounters.
 
-Mapping Names:
-============
-By default, the MDK is configured to use the official mapping names from Mojang for methods and fields 
-in the Minecraft codebase. These names are covered by a specific license. All modders should be aware of this
-license. For the latest license text, refer to the mapping file itself, or the reference copy here:
-https://github.com/NeoForged/NeoForm/blob/main/Mojang.md
+## Development
 
-Additional Resources: 
-==========
-Community Documentation: https://docs.neoforged.net/  
-NeoForged Discord: https://discord.neoforged.net/
+RaceCore is an ongoing personal project. Features and balancing are subject to change.
+
+**Minecraft:** 26.3  
+**Mod Loader:** NeoForge  
+**Language:** Java
+
+## Building
+
+Clone the repository and run:
+
+```bash
+./gradlew build
+```
+
+On Windows, use `gradlew.bat build`.
+
+The compiled mod will be available in `build/libs/`.
+
+## License
+
+All rights reserved. See `TEMPLATE_LICENSE.txt` for the license covering the original NeoForge template files.
